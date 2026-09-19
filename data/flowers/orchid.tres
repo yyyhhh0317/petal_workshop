@@ -10,7 +10,7 @@ description = "高洁与君子之风。镇店之宝级别的名花。"
 base_value = 30
 cost = 15
 color_tags = Array[String](["purple", "cool"])
-category = "orchid"
+category = "main"
 rarity = 2
 unlock_condition = "reputation:3"
 

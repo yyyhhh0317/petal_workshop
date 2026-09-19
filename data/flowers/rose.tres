@@ -10,7 +10,7 @@ description = "爱与热情。经典的花店主角。"
 base_value = 20
 cost = 10
 color_tags = Array[String](["red", "warm"])
-category = "rose"
+category = "main"
 rarity = 1
 unlock_condition = "always"
 

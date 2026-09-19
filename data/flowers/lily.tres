@@ -10,7 +10,7 @@ description = "纯洁与庄严。白百合是婚礼与祝福的常客。"
 base_value = 15
 cost = 8
 color_tags = Array[String](["white", "cool"])
-category = "lily"
+category = "main"
 rarity = 1
 unlock_condition = "always"
 

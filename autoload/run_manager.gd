@@ -5,7 +5,7 @@ extends Node
 
 const BASE_START_MONEY := 500
 const DEFAULT_TARGET_DAYS := 10
-const DEFAULT_DEBT := 600
+const DEFAULT_DEBT := 900
 const BOUQUET_MAX := 5
 
 var run_active := false
@@ -55,7 +55,7 @@ func start_run(p_seed: int = 0, p_target_days: int = DEFAULT_TARGET_DAYS) -> voi
 		display_slots.append({"bouquet": [], "result": null})
 	FlowerDatabase.load_all()
 	var unlocked := FlowerDatabase.get_unlocked_flowers(int(MetaManager.meta.reputation))
-	flower_pool = seed_generator.roll_flower_pool(5, unlocked)
+	flower_pool = seed_generator.roll_flower_pool(8, unlocked)
 	daily_event = event_system.roll_daily_event(seed_generator.get_rng(), EventSystem.load_event_pool())
 	EventBus.run_started.emit(seed_value)
 

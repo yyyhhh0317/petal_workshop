@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="ComboRule" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/combo_rule.gd" id="1_rule"]
+
+[resource]
+script = ExtResource("1_rule")
+id = "all_middle"
+display_name = "缤纷满堂（全中花）"
+rule_type = 3
+priority = 8
+description = "全束中花，缤纷满堂，价值提升 20%。"
+value_multiplier = 1.2
+required_ids = Array[String]([])
+any_of_ids = Array[String]([])
+required_tags = Array[String]([])
+required_category = "middle"
+min_matches = 1
+require_shared_tag = false
+required_tags_all = Array[String]([])
+required_categories = Array[String]([])
+any_of_tags = Array[String]([])
+require_shared_category = true
+require_min_rarity = 0
+any_min_rarity = 0
+require_min_size = 0
+require_exact_size = 0
+require_max_size = 0
+is_taboo = false

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="FlowerData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/flower_data.gd" id="1_flower"]
+
+[resource]
+script = ExtResource("1_flower")
+id = "osmanthus"
+display_name = "桂花"
+description = "吉祥与收获。秋天的第一缕香。"
+base_value = 14
+cost = 7
+color_tags = Array[String](["yellow", "warm"])
+category = "filler"
+rarity = 1
+unlock_condition = "always"
+

@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="DailyEvent" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/daily_event.gd" id="1_ev"]
+
+[resource]
+script = ExtResource("1_ev")
+id = "festival"
+display_name = "节日庆典"
+description = "全城欢庆，花束价值提升 40%！（罕见）"
+weight = 3
+cost_multiplier = 1
+value_multiplier = 1.4
+affected_tags = Array[String]([])
+duration_days = 1

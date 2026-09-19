@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="FlowerData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/flower_data.gd" id="1_flower"]
+
+[resource]
+script = ExtResource("1_flower")
+id = "poppy"
+display_name = "虞美人"
+description = "生离死别与抚慰。红得让人心疼。"
+base_value = 20
+cost = 10
+color_tags = Array[String](["red", "warm"])
+category = "middle"
+rarity = 2
+unlock_condition = "reputation:4"
+

@@ -145,7 +145,7 @@ func _build_arrange_panel() -> Control:
 	panel.add_child(vbox)
 
 	var slots_label := Label.new()
-	slots_label.text = "展示位（点击选择，橱窗位 ×1.5 价值加成）"
+	slots_label.text = "展示位（橱窗 ×1.5 · 中央 ≥3支 ×1.15 · 角落 流行×1.4）"
 	vbox.add_child(slots_label)
 
 	_slot_group = ButtonGroup.new()
@@ -233,7 +233,12 @@ func _refresh_arrange_panel() -> void:
 	for i in _slot_buttons.size():
 		var btn := _slot_buttons[i]
 		var slot = RunManager.display_slots[i]
-		var text := "%s %s" % [RunManager.get_slot_name(i), "×1.5" if i == 0 else ""]
+		var hint := ""
+		match i:
+			0: hint = "×1.5"
+			1: hint = "×1.15（3支+）"
+			2: hint = "流行×1.4"
+		var text := "%s %s" % [RunManager.get_slot_name(i), hint]
 		if slot.result != null:
 			var r: ComboResult = slot.result
 			var names: Array[String] = []

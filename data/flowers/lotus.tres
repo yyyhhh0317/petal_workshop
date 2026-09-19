@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="FlowerData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/flower_data.gd" id="1_flower"]
+
+[resource]
+script = ExtResource("1_flower")
+id = "lotus"
+display_name = "荷花"
+description = "出淤泥而不染。盛夏的君子。"
+base_value = 26
+cost = 13
+color_tags = Array[String](["pink", "cool"])
+category = "main"
+rarity = 2
+unlock_condition = "reputation:6"
+

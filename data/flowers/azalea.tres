@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="FlowerData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/flower_data.gd" id="1_flower"]
+
+[resource]
+script = ExtResource("1_flower")
+id = "azalea"
+display_name = "杜鹃"
+description = "节制与繁荣。漫山遍野的热烈。"
+base_value = 19
+cost = 9
+color_tags = Array[String](["red", "cool"])
+category = "middle"
+rarity = 2
+unlock_condition = "reputation:3"
+

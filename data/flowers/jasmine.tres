@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="FlowerData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/flower_data.gd" id="1_flower"]
+
+[resource]
+script = ExtResource("1_flower")
+id = "jasmine"
+display_name = "茉莉"
+description = "忠贞与素雅。好一朵美丽的茉莉花。"
+base_value = 13
+cost = 6
+color_tags = Array[String](["white", "cool"])
+category = "filler"
+rarity = 1
+unlock_condition = "always"
+

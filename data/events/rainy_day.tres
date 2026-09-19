@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="DailyEvent" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/daily_event.gd" id="1_ev"]
+
+[resource]
+script = ExtResource("1_ev")
+id = "rainy_day"
+display_name = "阴雨连绵"
+description = "下雨天客流稀少，花束整体价值下降 10%。"
+weight = 8
+cost_multiplier = 1
+value_multiplier = 0.9
+affected_tags = Array[String]([])
+duration_days = 1

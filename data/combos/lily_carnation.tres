@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="ComboRule" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/combo_rule.gd" id="1_rule"]
+
+[resource]
+script = ExtResource("1_rule")
+id = "lily_carnation"
+display_name = "祝福之约：百合+康乃馨"
+rule_type = 1
+priority = 16
+description = "纯洁与母爱的祝福之约，价值提升 60%。"
+value_multiplier = 1.6
+required_ids = Array[String](["lily", "carnation"])
+any_of_ids = Array[String]([])
+required_tags = Array[String]([])
+required_category = ""
+min_matches = 1
+require_shared_tag = false
+required_tags_all = Array[String]([])
+required_categories = Array[String]([])
+any_of_tags = Array[String]([])
+require_shared_category = false
+require_min_rarity = 0
+any_min_rarity = 0
+require_min_size = 0
+require_exact_size = 0
+require_max_size = 0
+is_taboo = false

@@ -2,9 +2,13 @@ class_name ComboEngine
 extends RefCounted
 ## 组合规则计算引擎（核心策略系统）：
 ## 基础价值之和 × Π(命中规则倍率) × 位置加成 × 流行加成。
+## 位置效果：橱窗位 ×1.5；中央位 ≥3 支 ×1.15；角落位流行加成 ×1.4（其余 ×1.2）。
 
 const WINDOW_MULTIPLIER := 1.5
+const CENTER_MULTIPLIER := 1.15
+const CENTER_MIN_FLOWERS := 3
 const TREND_MULTIPLIER := 1.2
+const CORNER_TREND_MULTIPLIER := 1.4
 
 
 func calculate_value(flower_ids: Array[String], context: ComboContext = null) -> ComboResult:
@@ -27,12 +31,20 @@ func calculate_value(flower_ids: Array[String], context: ComboContext = null) ->
 		rule_ids.append(rule.id)
 
 	if context:
-		if context.slot_type == ComboContext.SlotType.WINDOW:
-			multiplier *= WINDOW_MULTIPLIER
-			modifiers.append("橱窗位加成 x%.1f" % WINDOW_MULTIPLIER)
+		match context.slot_type:
+			ComboContext.SlotType.WINDOW:
+				multiplier *= WINDOW_MULTIPLIER
+				modifiers.append("橱窗位加成 x%.1f" % WINDOW_MULTIPLIER)
+			ComboContext.SlotType.CENTER:
+				if flowers.size() >= CENTER_MIN_FLOWERS:
+					multiplier *= CENTER_MULTIPLIER
+					modifiers.append("中央展台加成 x%.2f" % CENTER_MULTIPLIER)
+			ComboContext.SlotType.CORNER:
+				pass
 		if not context.trend_tags.is_empty() and _all_have_any_tag(flowers, context.trend_tags):
-			multiplier *= TREND_MULTIPLIER
-			modifiers.append("流行趋势加成 x%.1f" % TREND_MULTIPLIER)
+			var trend_mult := CORNER_TREND_MULTIPLIER if context.slot_type == ComboContext.SlotType.CORNER else TREND_MULTIPLIER
+			multiplier *= trend_mult
+			modifiers.append("流行趋势加成 x%.1f" % trend_mult)
 
 	return ComboResult.new(base, multiplier, modifiers, rule_ids)
 

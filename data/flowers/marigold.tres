@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="FlowerData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/flower_data.gd" id="1_flower"]
+
+[resource]
+script = ExtResource("1_flower")
+id = "marigold"
+display_name = "万寿菊"
+description = "长寿与健康。金黄的小太阳。"
+base_value = 11
+cost = 5
+color_tags = Array[String](["yellow", "warm"])
+category = "filler"
+rarity = 1
+unlock_condition = "always"
+

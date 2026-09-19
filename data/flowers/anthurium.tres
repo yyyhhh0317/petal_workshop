@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="FlowerData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/flower_data.gd" id="1_flower"]
+
+[resource]
+script = ExtResource("1_flower")
+id = "anthurium"
+display_name = "红掌"
+description = "热情与鸿运。心形的火焰。"
+base_value = 27
+cost = 13
+color_tags = Array[String](["red", "warm"])
+category = "main"
+rarity = 3
+unlock_condition = "reputation:8"
+

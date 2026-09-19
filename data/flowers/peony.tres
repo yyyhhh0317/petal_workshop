@@ -10,7 +10,7 @@ description = "雍容华贵，寓意富贵圆满。"
 base_value = 28
 cost = 14
 color_tags = Array[String](["pink", "warm"])
-category = "peony"
+category = "main"
 rarity = 2
 unlock_condition = "reputation:6"
 

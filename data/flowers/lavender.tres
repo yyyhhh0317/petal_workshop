@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="FlowerData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/flower_data.gd" id="1_flower"]
+
+[resource]
+script = ExtResource("1_flower")
+id = "lavender"
+display_name = "薰衣草"
+description = "等待爱情。紫色的香气让人安心。"
+base_value = 15
+cost = 8
+color_tags = Array[String](["purple", "cool"])
+category = "middle"
+rarity = 1
+unlock_condition = "always"
+

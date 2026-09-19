@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="DailyEvent" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/daily_event.gd" id="1_ev"]
+
+[resource]
+script = ExtResource("1_ev")
+id = "bumper_harvest"
+display_name = "丰收大甩卖"
+description = "花农大丰收，所有花材进货成本下降 30%。"
+weight = 10
+cost_multiplier = 0.7
+value_multiplier = 1
+affected_tags = Array[String]([])
+duration_days = 1

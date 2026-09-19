@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="DailyEvent" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/daily_event.gd" id="1_ev"]
+
+[resource]
+script = ExtResource("1_ev")
+id = "yellow_trend"
+display_name = "金色流行"
+description = "今天黄色系花束大受欢迎，价值提升 10%，黄色成为流行趋势。"
+weight = 10
+cost_multiplier = 1
+value_multiplier = 1.1
+affected_tags = Array[String](["yellow"])
+duration_days = 1

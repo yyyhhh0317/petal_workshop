@@ -38,14 +38,15 @@ func _test_database() -> void:
 	var flowers := FlowerDatabase.get_all_flowers()
 	var rules := FlowerDatabase.get_combo_rules()
 	print("[smoke] 花材 %d 种，组合规则 %d 条" % [flowers.size(), rules.size()])
-	_check(flowers.size() >= 8, "花材数据加载（≥8 种）")
-	_check(rules.size() >= 5, "组合规则加载（≥5 条）")
+	_check(flowers.size() >= 30, "花材数据加载（≥30 种）")
+	_check(rules.size() >= 60, "组合规则加载（≥60 条）")
 	_check(FlowerDatabase.get_flower("orchid") != null, "兰花数据可查询")
-	_check(FlowerDatabase.get_unlocked_flowers(0).size() == 6, "声望 0 锁定稀有花材")
-	_check(FlowerDatabase.get_unlocked_flowers(3).size() == 7, "声望 3 解锁兰花")
-	_check(FlowerDatabase.get_unlocked_flowers(6).size() == 8, "声望 6 解锁芍药")
-	_check(CustomerSystem.get_profiles().size() >= 4, "顾客档案加载（≥4 种）")
-	_check(EventSystem.load_event_pool().size() >= 2, "事件池加载（≥2 个）")
+	_check(FlowerDatabase.get_unlocked_flowers(0).size() == 18, "声望 0 解锁 18 种基础花材")
+	_check(FlowerDatabase.get_unlocked_flowers(3).size() == 21, "声望 3 解锁兰花/鸢尾/杜鹃")
+	_check(FlowerDatabase.get_unlocked_flowers(6).size() == 28, "声望 6 解锁荷花/芍药")
+	_check(FlowerDatabase.get_unlocked_flowers(9).size() == 30, "声望 9 全花材解锁")
+	_check(CustomerSystem.get_profiles().size() >= 10, "顾客档案加载（≥10 种）")
+	_check(EventSystem.load_event_pool().size() >= 12, "事件池加载（≥12 个）")
 
 
 func _test_combo_engine() -> void:
@@ -54,23 +55,38 @@ func _test_combo_engine() -> void:
 	var classic := engine.calculate_value(["rose", "babys_breath"], ctx)
 	print("[smoke] 玫瑰+满天星: base=%d mult=%.2f final=%d" % [classic.base_value, classic.multiplier, classic.final_value])
 	_check(classic.final_value > classic.base_value, "传说组合（玫瑰+满天星）应增值")
-	_check(classic.matched_rule_ids.has("legendary_rose_babys_breath"), "命中规则 id 已记录")
+	_check(classic.matched_rule_ids.has("legendary_rose_babys_breath"), "传说规则命中")
+	_check(classic.matched_rule_ids.has("main_filler"), "主配结构规则命中")
+	_check(classic.matched_rule_ids.has("red_white_clash"), "红白相冲规则命中")
 	var taboo := engine.calculate_value(["lily", "chrysanthemum"], ctx)
 	print("[smoke] 百合+菊花: base=%d mult=%.2f final=%d" % [taboo.base_value, taboo.multiplier, taboo.final_value])
 	_check(taboo.final_value < taboo.base_value, "禁忌组合（百合+菊花）应贬值")
+	_check(taboo.matched_rule_ids.has("taboo_lily_chrysanthemum"), "禁忌规则命中")
 	var orchid_combo := engine.calculate_value(["rose", "orchid"], ctx)
-	_check(orchid_combo.final_value == 90, "雅俗共赏（玫瑰+兰花）x1.8 生效")
+	_check(orchid_combo.matched_rule_ids.has("legendary_rose_orchid"), "雅俗共赏规则命中")
+	_check(orchid_combo.matched_rule_ids.has("all_main"), "全主花规则命中")
+	_check(orchid_combo.matched_rule_ids.has("warm_cool_clash"), "冷暖冲突规则命中")
 	var spring_combo := engine.calculate_value(["sunflower", "tulip"], ctx)
-	# 向日葵与郁金香共享 warm 标签：传说 x1.6 × 同色系 x1.1 = 34 → 60
-	_check(spring_combo.final_value == 60, "春日礼赞 x1.6 + 同色系 x1.1（34→60）")
+	_check(spring_combo.matched_rule_ids.has("legendary_sunflower_tulip"), "春日礼赞规则命中")
+	_check(spring_combo.matched_rule_ids.has("pure_warm"), "纯暖色束规则命中")
 	var window_ctx := ComboContext.new()
 	window_ctx.slot_type = ComboContext.SlotType.WINDOW
 	var windowed := engine.calculate_value(["rose"], window_ctx)
 	_check(windowed.final_value > 20, "橱窗位加成生效")
+	var center_ctx := ComboContext.new()
+	center_ctx.slot_type = ComboContext.SlotType.CENTER
+	var centered := engine.calculate_value(["rose", "tulip", "daisy"], center_ctx)
+	_check(centered.modifiers.has("中央展台加成 x1.15"), "中央位 ≥3 支加成生效")
+	var corner_ctx := ComboContext.new()
+	corner_ctx.slot_type = ComboContext.SlotType.CORNER
+	corner_ctx.trend_tags = ["warm"]
+	var cornered := engine.calculate_value(["rose"], corner_ctx)
+	_check(cornered.modifiers.has("流行趋势加成 x1.4"), "角落位流行加成 x1.4 生效")
+	_check(cornered.final_value == 29, "角落位流行计算正确（20×1.05×1.4）")
 	var trend_ctx := ComboContext.new()
 	trend_ctx.trend_tags = ["warm"]
 	var trended := engine.calculate_value(["rose", "tulip"], trend_ctx)
-	_check(trended.final_value > 20 + 18, "流行趋势加成生效")
+	_check(trended.final_value > 20 + 18, "普通流行趋势加成生效")
 
 
 func _test_seed_determinism() -> void:
@@ -154,19 +170,19 @@ func _test_run_goal() -> void:
 	## 债务周目目标：第 10 天按资金是否 ≥ 债务判定胜负。
 	MetaManager.reset_meta()
 	RunManager.start_run(5, 10)
-	_check(RunManager.debt == 600, "周目债务 600")
-	_check(RunManager.debt_remaining() == 100, "初始债务差额 100")
+	_check(RunManager.debt == 900, "周目债务 900")
+	_check(RunManager.debt_remaining() == 400, "初始债务差额 400")
 	for i in 10:
 		RunManager.advance_day()
 	_check(not RunManager.run_active, "第 10 天结算后周目结束")
-	_check(MetaManager.meta.last_run.victory == false, "资金不足（500<600）判负")
+	_check(MetaManager.meta.last_run.victory == false, "资金不足（500<900）判负")
 
 	MetaManager.reset_meta()
 	RunManager.start_run(6, 10)
-	RunManager.economy.earn(200)
+	RunManager.economy.earn(500)
 	for i in 10:
 		RunManager.advance_day()
-	_check(MetaManager.meta.last_run.victory == true, "资金足够（700≥600）判胜")
+	_check(MetaManager.meta.last_run.victory == true, "资金足够（1000≥900）判胜")
 
 
 func _test_meta_progression() -> void:
@@ -198,12 +214,13 @@ func _test_meta_progression() -> void:
 	var expected_cost := RunManager.event_system.apply_cost_multiplier(int(round(8.0 * 0.9)))
 	_check(RunManager.get_flower_cost("lily") == expected_cost, "进货折扣 Lv.2（10%）生效")
 	var pool := RunManager.flower_pool
+	var rep := int(MetaManager.meta.reputation)
 	var unlocked_ok := true
 	for id in pool:
-		var f := FlowerDatabase.get_flower(id)
-		if f.unlock_condition.begins_with("reputation:"):
+		if not FlowerDatabase.is_unlocked(FlowerDatabase.get_flower(id), rep):
 			unlocked_ok = false
-	_check(unlocked_ok, "花材池只含当前声望已解锁花材")
+	_check(unlocked_ok, "花材池每朵花都在当前声望下已解锁")
+	_check(pool.size() == 8, "花材池规模 8 种")
 	RunManager.end_run(false)
 
 

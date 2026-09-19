@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="FlowerData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/flower_data.gd" id="1_flower"]
+
+[resource]
+script = ExtResource("1_flower")
+id = "gladiolus"
+display_name = "剑兰"
+description = "思念与坚强。一柄指向天空的剑。"
+base_value = 23
+cost = 11
+color_tags = Array[String](["purple", "warm"])
+category = "middle"
+rarity = 2
+unlock_condition = "reputation:5"
+

@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="ComboRule" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/combo_rule.gd" id="1_rule"]
+
+[resource]
+script = ExtResource("1_rule")
+id = "marigold_lily"
+display_name = "禁忌：万寿菊+百合"
+rule_type = 0
+priority = 100
+description = "祭坛的联想挥之不去，价值腰斩。"
+value_multiplier = 0.5
+required_ids = Array[String](["marigold", "lily"])
+any_of_ids = Array[String]([])
+required_tags = Array[String]([])
+required_category = ""
+min_matches = 1
+require_shared_tag = false
+required_tags_all = Array[String]([])
+required_categories = Array[String]([])
+any_of_tags = Array[String]([])
+require_shared_category = false
+require_min_rarity = 0
+any_min_rarity = 0
+require_min_size = 0
+require_exact_size = 0
+require_max_size = 0
+is_taboo = true

@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="ComboRule" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/combo_rule.gd" id="1_rule"]
+
+[resource]
+script = ExtResource("1_rule")
+id = "full_five"
+display_name = "圆满之束"
+rule_type = 3
+priority = 7
+description = "五支满束，寓意圆满，价值提升 10%。"
+value_multiplier = 1.1
+required_ids = Array[String]([])
+any_of_ids = Array[String]([])
+required_tags = Array[String]([])
+required_category = ""
+min_matches = 1
+require_shared_tag = false
+required_tags_all = Array[String]([])
+required_categories = Array[String]([])
+any_of_tags = Array[String]([])
+require_shared_category = false
+require_min_rarity = 0
+any_min_rarity = 0
+require_min_size = 0
+require_exact_size = 5
+require_max_size = 0
+is_taboo = false

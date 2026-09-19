@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="FlowerData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/flower_data.gd" id="1_flower"]
+
+[resource]
+script = ExtResource("1_flower")
+id = "plum_blossom"
+display_name = "梅花"
+description = "傲骨迎春。雪中一点红。"
+base_value = 24
+cost = 12
+color_tags = Array[String](["pink", "cool"])
+category = "main"
+rarity = 2
+unlock_condition = "reputation:5"
+

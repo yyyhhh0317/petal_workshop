@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="FlowerData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/flower_data.gd" id="1_flower"]
+
+[resource]
+script = ExtResource("1_flower")
+id = "carnation"
+display_name = "康乃馨"
+description = "母爱与感恩。母亲节的主角。"
+base_value = 18
+cost = 9
+color_tags = Array[String](["pink", "warm"])
+category = "middle"
+rarity = 1
+unlock_condition = "always"
+

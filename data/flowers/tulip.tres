@@ -10,7 +10,7 @@ description = "优雅与告白。春天最受欢迎的访客。"
 base_value = 18
 cost = 9
 color_tags = Array[String](["pink", "warm"])
-category = "tulip"
+category = "middle"
 rarity = 1
 unlock_condition = "always"
 

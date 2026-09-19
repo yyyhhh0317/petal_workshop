@@ -10,7 +10,7 @@ description = "高洁与追思。祭祀场合常用，与百合搭配是花店�
 base_value = 15
 cost = 8
 color_tags = Array[String](["yellow", "warm"])
-category = "chrysanthemum"
+category = "middle"
 rarity = 1
 unlock_condition = "always"
 

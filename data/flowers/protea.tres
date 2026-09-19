@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="FlowerData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/flower_data.gd" id="1_flower"]
+
+[resource]
+script = ExtResource("1_flower")
+id = "protea"
+display_name = "帝王花"
+description = "王者与勇气。南非王冠上的明珠。"
+base_value = 32
+cost = 16
+color_tags = Array[String](["red", "cool"])
+category = "main"
+rarity = 3
+unlock_condition = "reputation:9"
+

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="FlowerData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/flower_data.gd" id="1_flower"]
+
+[resource]
+script = ExtResource("1_flower")
+id = "camellia"
+display_name = "山茶花"
+description = "谦逊与理想之爱。冬日的红宝石。"
+base_value = 21
+cost = 10
+color_tags = Array[String](["red", "warm"])
+category = "main"
+rarity = 2
+unlock_condition = "reputation:4"
+

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="FlowerData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/flower_data.gd" id="1_flower"]
+
+[resource]
+script = ExtResource("1_flower")
+id = "forget_me_not"
+display_name = "勿忘我"
+description = "永恒的记忆。蓝色的小小诺言。"
+base_value = 12
+cost = 6
+color_tags = Array[String](["blue", "cool"])
+category = "filler"
+rarity = 1
+unlock_condition = "always"
+

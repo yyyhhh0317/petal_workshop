@@ -10,7 +10,7 @@ description = "忠诚与阳光。总把脸转向太阳。"
 base_value = 16
 cost = 8
 color_tags = Array[String](["yellow", "warm"])
-category = "sunflower"
+category = "main"
 rarity = 1
 unlock_condition = "always"
 

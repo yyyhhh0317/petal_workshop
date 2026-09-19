@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="ComboRule" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/combo_rule.gd" id="1_rule"]
+
+[resource]
+script = ExtResource("1_rule")
+id = "poppy_forget_me_not"
+display_name = "追忆似水：虞美人+勿忘我"
+rule_type = 1
+priority = 16
+description = "抚慰与记忆的追忆之束，价值提升 70%。"
+value_multiplier = 1.7
+required_ids = Array[String](["poppy", "forget_me_not"])
+any_of_ids = Array[String]([])
+required_tags = Array[String]([])
+required_category = ""
+min_matches = 1
+require_shared_tag = false
+required_tags_all = Array[String]([])
+required_categories = Array[String]([])
+any_of_tags = Array[String]([])
+require_shared_category = false
+require_min_rarity = 0
+any_min_rarity = 0
+require_min_size = 0
+require_exact_size = 0
+require_max_size = 0
+is_taboo = false

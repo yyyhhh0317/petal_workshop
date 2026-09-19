@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="CustomerProfile" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/customer_profile.gd" id="1_cp"]
+
+[resource]
+script = ExtResource("1_cp")
+id = "grandma"
+display_name = "怀旧的老奶奶"
+preferred_tags = Array[String](["warm", "yellow"])
+disliked_tags = Array[String](["purple"])
+budget_min = 40
+budget_max = 100
+patience = 5
+story_hint = "想念老院子里暖洋洋的花。"
