@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="ComboRule" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/combo_rule.gd" id="1_rule"]
+
+[resource]
+script = ExtResource("1_rule")
+id = "same_color"
+display_name = "同色系协调"
+rule_type = 2
+priority = 5
+description = "所有花材共享同一色系标签，价值 +10%。"
+value_multiplier = 1.1
+required_ids = Array[String]([])
+any_of_ids = Array[String]([])
+required_tags = Array[String]([])
+required_category = ""
+min_matches = 1
+require_shared_tag = true
+is_taboo = false
+

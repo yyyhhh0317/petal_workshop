@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="DailyEvent" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/daily_event.gd" id="1_ev"]
+
+[resource]
+script = ExtResource("1_ev")
+id = "white_sale"
+display_name = "花市大减价：白色花材"
+description = "今天白色系花材进货成本减半，白色成为流行趋势。"
+weight = 10
+cost_multiplier = 0.5
+value_multiplier = 1.0
+affected_tags = Array[String](["white"])
+duration_days = 1

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="FlowerData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/flower_data.gd" id="1_flower"]
+
+[resource]
+script = ExtResource("1_flower")
+id = "babys_breath"
+display_name = "满天星"
+description = "甘愿做配角，表达守望与思念。与玫瑰组合表达「期待重逢」。"
+base_value = 8
+cost = 4
+color_tags = Array[String](["white", "filler"])
+category = "filler"
+rarity = 1
+unlock_condition = "always"
+

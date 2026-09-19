@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="FlowerData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/flower_data.gd" id="1_flower"]
+
+[resource]
+script = ExtResource("1_flower")
+id = "chrysanthemum"
+display_name = "菊花"
+description = "高洁与追思。祭祀场合常用，与百合搭配是花店禁忌。"
+base_value = 15
+cost = 8
+color_tags = Array[String](["yellow", "warm"])
+category = "chrysanthemum"
+rarity = 1
+unlock_condition = "always"
+

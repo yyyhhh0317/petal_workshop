@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="ComboRule" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/combo_rule.gd" id="1_rule"]
+
+[resource]
+script = ExtResource("1_rule")
+id = "taboo_lily_chrysanthemum"
+display_name = "禁忌：百合+菊花"
+rule_type = 0
+priority = 100
+description = "祭祀场景的联想让客人避之不及，价值腰斩。"
+value_multiplier = 0.5
+required_ids = Array[String](["lily", "chrysanthemum"])
+any_of_ids = Array[String]([])
+required_tags = Array[String]([])
+required_category = ""
+min_matches = 1
+require_shared_tag = false
+is_taboo = true
+

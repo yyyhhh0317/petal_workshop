@@ -1,0 +1,16 @@
+# Godot 4
+.godot/
+*.translation
+export_presets.cfg
+export.cfg
+
+# 构建产物
+builds/
+*.tmp
+
+# 操作系统杂项
+Thumbs.db
+.DS_Store
+
+# 个人开发想法（不纳入版本控制）
+ideas/

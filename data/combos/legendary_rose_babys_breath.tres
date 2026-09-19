@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="ComboRule" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/combo_rule.gd" id="1_rule"]
+
+[resource]
+script = ExtResource("1_rule")
+id = "legendary_rose_babys_breath"
+display_name = "经典组合：玫瑰+满天星"
+rule_type = 1
+priority = 20
+description = "表达「期待重逢」的经典搭配，价值翻倍。"
+value_multiplier = 2.0
+required_ids = Array[String](["rose", "babys_breath"])
+any_of_ids = Array[String]([])
+required_tags = Array[String]([])
+required_category = ""
+min_matches = 1
+require_shared_tag = false
+is_taboo = false
+
