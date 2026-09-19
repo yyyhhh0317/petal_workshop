@@ -90,6 +90,11 @@ func set_phase(phase: DayPhase.Phase) -> void:
 	EventBus.phase_changed.emit(phase)
 
 
+func abandon_run() -> void:
+	## 中途放弃当前周目：不折算元进度，仅置为非活动。
+	run_active = false
+
+
 func debt_remaining() -> int:
 	return maxi(debt - economy.money, 0)
 

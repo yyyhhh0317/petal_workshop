@@ -1,6 +1,7 @@
-[gd_resource type="Resource" script_class="FlowerData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="FlowerData" load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/core/flower_data.gd" id="1_flower"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ranunculus.svg" id="2_icon"]
 
 [resource]
 script = ExtResource("1_flower")
@@ -12,5 +13,5 @@ cost = 10
 color_tags = Array[String](["yellow", "warm"])
 category = "middle"
 rarity = 2
+icon = ExtResource("2_icon")
 unlock_condition = "reputation:5"
-

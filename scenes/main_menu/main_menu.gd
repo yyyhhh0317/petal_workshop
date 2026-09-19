@@ -10,8 +10,15 @@ extends Control
 
 
 func _ready() -> void:
+	theme = ThemeFactory.create()
+	var bg := ColorRect.new()
+	bg.color = Color("#f7f0df")
+	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(bg)
+	move_child(bg, 0)
+
 	title_label.text = "花间工坊"
-	version_label.text = "Petal Workshop —— 原型 v0.4\nGodot 4.7.2 · M2 Roguelite 系统"
+	version_label.text = "Petal Workshop —— 原型 v0.5\nGodot 4.7.2 · M3 内容填充"
 	_refresh_stats()
 	start_button.pressed.connect(_on_start_pressed)
 	challenge_button.pressed.connect(_on_challenge_pressed)

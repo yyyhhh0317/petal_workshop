@@ -1,5 +1,6 @@
 extends Control
 ## 工坊手册（元进度中心）：图鉴浏览、花材解锁状态、技能点消费与永久升级。
+## 支持 ESC 与顶部「返回主菜单」按钮退出。
 
 var _stats_label: Label
 var _combo_box: VBoxContainer
@@ -9,56 +10,95 @@ var _feedback_label: Label
 
 
 func _ready() -> void:
+	theme = ThemeFactory.create()
+	_build_background()
 	_build_ui()
 	_refresh()
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_cancel"):
+		_back_to_menu()
+		get_viewport().set_input_as_handled()
+
+
+func _back_to_menu() -> void:
+	get_tree().change_scene_to_file("res://scenes/main_menu/main_menu.tscn")
+
+
+func _build_background() -> void:
+	var bg := ColorRect.new()
+	bg.color = Color("#f7f0df")
+	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(bg)
+	move_child(bg, 0)
 
 
 func _build_ui() -> void:
 	var margin := MarginContainer.new()
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	margin.add_theme_constant_override("margin_left", 16)
-	margin.add_theme_constant_override("margin_right", 16)
-	margin.add_theme_constant_override("margin_top", 12)
-	margin.add_theme_constant_override("margin_bottom", 12)
+	margin.add_theme_constant_override("margin_left", 20)
+	margin.add_theme_constant_override("margin_right", 20)
+	margin.add_theme_constant_override("margin_top", 14)
+	margin.add_theme_constant_override("margin_bottom", 14)
 	add_child(margin)
 
 	var root := VBoxContainer.new()
-	root.add_theme_constant_override("separation", 8)
+	root.add_theme_constant_override("separation", 10)
 	margin.add_child(root)
 
+	# 顶部：标题 + 返回
+	var top := HBoxContainer.new()
+	root.add_child(top)
 	var title := Label.new()
 	title.text = "📖 工坊手册"
-	title.add_theme_font_size_override("font_size", 28)
-	root.add_child(title)
+	title.add_theme_font_size_override("font_size", 32)
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	top.add_child(title)
+	var back_btn := Button.new()
+	back_btn.text = "← 返回主菜单"
+	back_btn.pressed.connect(_back_to_menu)
+	top.add_child(back_btn)
 
 	_stats_label = Label.new()
+	_stats_label.add_theme_font_size_override("font_size", 22)
 	root.add_child(_stats_label)
 
-	var combo_title := Label.new()
-	combo_title.text = "—— 组合图鉴 ——"
-	root.add_child(combo_title)
+	# 可滚动内容
+	var scroll := ScrollContainer.new()
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	root.add_child(scroll)
+	var content := VBoxContainer.new()
+	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	content.add_theme_constant_override("separation", 10)
+	scroll.add_child(content)
+
+	content.add_child(_section_title("—— 组合图鉴 ——"))
 	_combo_box = VBoxContainer.new()
-	root.add_child(_combo_box)
+	_combo_box.add_theme_constant_override("separation", 4)
+	content.add_child(_combo_box)
 
-	var flower_title := Label.new()
-	flower_title.text = "—— 花材图鉴 ——"
-	root.add_child(flower_title)
+	content.add_child(_section_title("—— 花材图鉴 ——"))
 	_flower_box = VBoxContainer.new()
-	root.add_child(_flower_box)
+	_flower_box.add_theme_constant_override("separation", 4)
+	content.add_child(_flower_box)
 
-	var upgrade_title := Label.new()
-	upgrade_title.text = "—— 永久升级（消耗技能点）——"
-	root.add_child(upgrade_title)
+	content.add_child(_section_title("—— 永久升级（消耗技能点）——"))
 	_upgrade_box = VBoxContainer.new()
-	root.add_child(_upgrade_box)
+	_upgrade_box.add_theme_constant_override("separation", 8)
+	content.add_child(_upgrade_box)
 
 	_feedback_label = Label.new()
-	root.add_child(_feedback_label)
+	_feedback_label.add_theme_font_size_override("font_size", 22)
+	content.add_child(_feedback_label)
 
-	var back_btn := Button.new()
-	back_btn.text = "返回主菜单"
-	back_btn.pressed.connect(func() -> void: get_tree().change_scene_to_file("res://scenes/main_menu/main_menu.tscn"))
-	root.add_child(back_btn)
+
+func _section_title(text: String) -> Label:
+	var lb := Label.new()
+	lb.text = text
+	lb.add_theme_font_size_override("font_size", 26)
+	return lb
 
 
 func _refresh() -> void:
@@ -90,13 +130,24 @@ func _refresh() -> void:
 		child.queue_free()
 	var rep := int(m.reputation)
 	for f in FlowerDatabase.get_all_flowers():
-		var lb := Label.new()
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 8)
+		_flower_box.add_child(row)
 		if FlowerDatabase.is_unlocked(f, rep):
-			lb.text = "✔ %s（价值 %d）" % [f.display_name, f.base_value]
+			if f.icon:
+				var icon_rect := TextureRect.new()
+				icon_rect.texture = f.icon
+				icon_rect.custom_minimum_size = Vector2(28, 28)
+				icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+				row.add_child(icon_rect)
+			var lb := Label.new()
+			lb.text = "%s（价值 %d）" % [f.display_name, f.base_value]
+			row.add_child(lb)
 		else:
 			var need := int(f.unlock_condition.get_slice(":", 1))
+			var lb := Label.new()
 			lb.text = "🔒 ？？？（声望 %d 解锁）" % need
-		_flower_box.add_child(lb)
+			row.add_child(lb)
 
 	# 升级商店
 	for child in _upgrade_box.get_children():
@@ -105,6 +156,7 @@ func _refresh() -> void:
 	for upgrade_id in MetaManager.UPGRADE_DEFS:
 		var def: Dictionary = MetaManager.UPGRADE_DEFS[upgrade_id]
 		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 12)
 		_upgrade_box.add_child(row)
 		var level := MetaManager.get_upgrade_level(upgrade_id)
 		var max_level := MetaManager.get_upgrade_max(upgrade_id)
