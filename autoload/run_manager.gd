@@ -1,37 +1,58 @@
 extends Node
-## 单局生命周期管理器（Autoload）：周目开始、每日状态机、库存与展示位状态、
-## 进货/组合/营业/结算全流程，以及胜负判定。
-## M2：周目目标 = 在 target_days 天内攒够 debt 还清债务；元进度升级影响开局。
+## 单局生命周期管理器（Autoload）：只负责周目级状态与生命周期——
+## 种子 / 债务 / 目标天数 / 资金 / 花材池 / 胜负判定。
+## 每日循环（阶段状态机、库存、花束、展示位、营业、结算）已下沉至 DayCycle，
+## 本类保留门面方法委托给 day，保证既有调用方（UI / 测试）无需改动。
 
 const BASE_START_MONEY := 500
 const DEFAULT_TARGET_DAYS := 10
-const DEFAULT_DEBT := 900
-const BOUQUET_MAX := 5
+const DEFAULT_DEBT := 800
+const BASE_POOL_SIZE := 8
 
 var run_active := false
 var seed_value: int = 0
 var current_day: int = 0
 var target_days: int = DEFAULT_TARGET_DAYS
 var debt: int = DEFAULT_DEBT
-var current_phase: DayPhase.Phase = DayPhase.Phase.BUY
 var economy: EconomySystem
 var event_system: EventSystem
 var customer_system: CustomerSystem
 var seed_generator: SeedGenerator
 var combo_engine: ComboEngine
-
-var flower_pool: Array[String] = []      # 本局可进货的花材 id
-var inventory: Dictionary = {}           # flower_id -> 数量
-var current_bouquet: Array[String] = []  # 正在编辑的花束
-var current_slot_index: int = 0
-var display_slots: Array = []            # [{bouquet: Array[String], result: ComboResult}]
-var day_log: Array[String] = []          # 营业与凋谢日志
-var daily_event: DailyEvent
+var flower_pool: Array[String] = []      # 本局可进货的花材 id（周目级，开局随机）
 var run_reputation: int = 0              # 本局售花累计声望
+var day: DayCycle
 
+# —— 门面属性：委托 DayCycle，保持调用方兼容 ——
+
+var current_phase: DayPhase.Phase:
+	get: return day.current_phase if day else DayPhase.Phase.BUY
+
+var inventory: Dictionary:
+	get: return day.inventory if day else {}
+
+var current_bouquet: Array[String]:
+	get: return day.current_bouquet if day else []
+
+var current_slot_index: int:
+	get: return day.current_slot_index if day else 0
+	set(value): if day: day.current_slot_index = value
+
+var display_slots: Array:
+	get: return day.display_slots if day else []
+
+var day_log: Array[String]:
+	get: return day.day_log if day else []
+
+var daily_event: DailyEvent:
+	get: return day.daily_event if day else null
+
+
+# ---------- 周目生命周期 ----------
 
 func start_run(p_seed: int = 0, p_target_days: int = DEFAULT_TARGET_DAYS) -> void:
-	## 开始新周目：应用元进度升级（初始资金/折扣/展示位），花材池按声望解锁过滤。
+	## 开始新周目：应用元进度升级（初始资金/折扣/展示位/花材池），
+	## 花材池按声望解锁过滤，创建每日循环控制器。
 	seed_generator = SeedGenerator.new()
 	seed_generator.initialize(p_seed)
 	seed_value = seed_generator.seed_value
@@ -45,18 +66,11 @@ func start_run(p_seed: int = 0, p_target_days: int = DEFAULT_TARGET_DAYS) -> voi
 	target_days = p_target_days
 	debt = DEFAULT_DEBT
 	run_reputation = 0
-	current_phase = DayPhase.Phase.BUY
-	inventory.clear()
-	current_bouquet.clear()
-	current_slot_index = 0
-	display_slots.clear()
-	var slot_count := 3 + MetaManager.get_upgrade_level("up_slot")
-	for i in slot_count:
-		display_slots.append({"bouquet": [], "result": null})
 	FlowerDatabase.load_all()
 	var unlocked := FlowerDatabase.get_unlocked_flowers(int(MetaManager.meta.reputation))
-	flower_pool = seed_generator.roll_flower_pool(8, unlocked)
-	daily_event = event_system.roll_daily_event(seed_generator.get_rng(), EventSystem.load_event_pool())
+	flower_pool = seed_generator.roll_flower_pool(pool_size(), unlocked)
+	day = DayCycle.new(self)
+	day.daily_event = event_system.roll_daily_event(seed_generator.get_rng(), EventSystem.load_event_pool())
 	EventBus.run_started.emit(seed_value)
 
 
@@ -79,15 +93,9 @@ func advance_day() -> void:
 		end_run(economy.money >= debt)
 		return
 	current_day += 1
-	current_phase = DayPhase.Phase.BUY
-	daily_event = event_system.roll_daily_event(seed_generator.get_rng(), EventSystem.load_event_pool())
+	day.reset_for_new_day()
 	EventBus.day_started.emit(current_day)
-	EventBus.phase_changed.emit(current_phase)
-
-
-func set_phase(phase: DayPhase.Phase) -> void:
-	current_phase = phase
-	EventBus.phase_changed.emit(phase)
+	EventBus.phase_changed.emit(day.current_phase)
 
 
 func abandon_run() -> void:
@@ -95,201 +103,75 @@ func abandon_run() -> void:
 	run_active = false
 
 
+func slot_count() -> int:
+	return 3 + MetaManager.get_upgrade_level("up_slot")
+
+
+func pool_size() -> int:
+	return BASE_POOL_SIZE + MetaManager.get_upgrade_level("up_pool")
+
+
 func debt_remaining() -> int:
 	return maxi(debt - economy.money, 0)
 
 
-# ---------- 展示位 ----------
+# ---------- 门面委托（每日逻辑在 DayCycle） ----------
+
+func set_phase(phase: DayPhase.Phase) -> void:
+	day.set_phase(phase)
+
+
+func reroll_daily_event() -> bool:
+	return day.reroll_daily_event()
+
 
 func get_slot_name(index: int) -> String:
-	match index:
-		0: return "橱窗位"
-		1: return "中央位"
-		2: return "角落位"
-	return "普通位"
+	return day.get_slot_name(index)
 
 
 func get_slot_type(index: int) -> ComboContext.SlotType:
-	match index:
-		0: return ComboContext.SlotType.WINDOW
-		1: return ComboContext.SlotType.CENTER
-		2: return ComboContext.SlotType.CORNER
-	return ComboContext.SlotType.NORMAL
+	return day.get_slot_type(index)
 
-
-# ---------- 买花 ----------
 
 func get_flower_cost(id: String) -> int:
-	var f := FlowerDatabase.get_flower(id)
-	if f == null:
-		return 0
-	var base_cost := f.cost * (1.0 - 0.05 * MetaManager.get_upgrade_level("up_discount"))
-	return event_system.apply_cost_multiplier(int(round(base_cost)))
+	return day.get_flower_cost(id)
 
 
 func buy_flower(id: String, count: int = 1) -> bool:
-	var f := FlowerDatabase.get_flower(id)
-	if f == null:
-		return false
-	var total := get_flower_cost(id) * count
-	if not economy.spend(total):
-		return false
-	inventory[id] = int(inventory.get(id, 0)) + count
-	EventBus.inventory_changed.emit()
-	return true
+	return day.buy_flower(id, count)
 
 
 func inventory_total() -> int:
-	var total := 0
-	for id in inventory:
-		total += int(inventory[id])
-	return total
+	return day.inventory_total()
 
-
-# ---------- 组合 ----------
 
 func add_to_bouquet(id: String) -> bool:
-	if current_bouquet.size() >= BOUQUET_MAX:
-		return false
-	if int(inventory.get(id, 0)) <= 0:
-		return false
-	inventory[id] = int(inventory[id]) - 1
-	current_bouquet.append(id)
-	EventBus.bouquet_changed.emit()
-	EventBus.inventory_changed.emit()
-	return true
+	return day.add_to_bouquet(id)
 
 
 func remove_from_bouquet(id: String) -> void:
-	var idx := current_bouquet.find(id)
-	if idx < 0:
-		return
-	current_bouquet.remove_at(idx)
-	inventory[id] = int(inventory.get(id, 0)) + 1
-	EventBus.bouquet_changed.emit()
-	EventBus.inventory_changed.emit()
+	day.remove_from_bouquet(id)
 
 
 func clear_bouquet() -> void:
-	for id in current_bouquet:
-		inventory[id] = int(inventory.get(id, 0)) + 1
-	current_bouquet.clear()
-	EventBus.bouquet_changed.emit()
-	EventBus.inventory_changed.emit()
+	day.clear_bouquet()
 
 
 func compute_bouquet_value() -> ComboResult:
-	## 按当前选中展示位的上下文实时计算花束价值。
-	if current_bouquet.is_empty():
-		return ComboResult.new()
-	var ctx := ComboContext.new()
-	ctx.slot_type = get_slot_type(current_slot_index)
-	ctx.trend_tags = event_system.trend_tags
-	ctx.day_number = current_day
-	return combo_engine.calculate_value(current_bouquet.duplicate(), ctx)
+	return day.compute_bouquet_value()
 
 
 func place_bouquet_to_current_slot() -> bool:
-	if current_bouquet.is_empty():
-		return false
-	var result := compute_bouquet_value()
-	display_slots[current_slot_index] = {"bouquet": current_bouquet.duplicate(), "result": result}
-	current_bouquet.clear()
-	EventBus.bouquet_changed.emit()
-	EventBus.display_changed.emit()
-	for rule_id in result.matched_rule_ids:
-		MetaManager.record_combo(rule_id)
-	return true
+	return day.place_bouquet_to_current_slot()
 
-
-# ---------- 营业 ----------
 
 func run_business_day() -> Array[String]:
-	## 生成当日顾客，按偏好挑选花束并付款；满意度低且超预算时顾客会砍价。
-	clear_bouquet()
-	day_log.clear()
-	var rng := seed_generator.get_rng()
-	var customer_count := rng.randi_range(2, 4)
-	for i in customer_count:
-		var profile: CustomerProfile = seed_generator.pick_from(CustomerSystem.get_profiles())
-		if profile == null:
-			continue
-		var customer := customer_system.generate_customer(profile, rng)
-		var slot_idx := customer_system.pick_bouquet(customer, display_slots)
-		if slot_idx < 0:
-			day_log.append("%s 逛了一圈，没有满意的花束，离开了。" % profile.display_name)
-			continue
-		var slot = display_slots[slot_idx]
-		var result: ComboResult = slot.result
-		var flowers := _resolve_flowers(slot.bouquet)
-		var score := customer_system.score_bouquet(customer, flowers)
-		var pay := int(round(result.final_value * (0.6 + 0.8 * score)))
-		pay = event_system.apply_value_multiplier(pay)
-		var budget: int = customer.budget
-		var haggle := false
-		if score >= 0.5:
-			pay = mini(pay, budget)
-		elif pay > budget:
-			pay = int(round(float(budget) * 0.7))
-			haggle = true
-		economy.earn(pay)
-		run_reputation += 1
-		if haggle:
-			day_log.append("%s 买走了「%s」，讨价还价后支付 %d 元（满意度 %d%%）" % [profile.display_name, get_slot_name(slot_idx), pay, int(score * 100.0)])
-		else:
-			day_log.append("%s 买走了「%s」，支付 %d 元（满意度 %d%%）" % [profile.display_name, get_slot_name(slot_idx), pay, int(score * 100.0)])
-		EventBus.customer_served.emit(score, pay)
-		slot.bouquet.clear()
-		slot.result = null
-		EventBus.display_changed.emit()
-	return day_log
+	return day.run_business_day()
 
 
 func finish_day() -> Dictionary:
-	## 结算当日收支；未售出花束凋谢；当日事件失效。
-	var settle := economy.end_day()
-	var wilted := 0
-	for i in display_slots.size():
-		var slot = display_slots[i]
-		if slot.result != null:
-			wilted += slot.bouquet.size()
-			slot.bouquet.clear()
-			slot.result = null
-	if wilted > 0:
-		day_log.append("%d 支未售出的花在夜里凋谢了。" % wilted)
-	event_system.active_events.clear()
-	event_system.trend_tags.clear()
-	daily_event = null
-	EventBus.display_changed.emit()
-	return settle
+	return day.finish_day()
 
 
 func check_defeat() -> bool:
-	## 资金不足以买最便宜的花且没有可售库存时破产。
-	var cheapest := 0
-	for id in flower_pool:
-		var c := get_flower_cost(id)
-		if cheapest == 0 or c < cheapest:
-			cheapest = c
-	var has_stock := false
-	for id in inventory:
-		if int(inventory[id]) > 0:
-			has_stock = true
-			break
-	for slot in display_slots:
-		if slot.result != null:
-			has_stock = true
-			break
-	if cheapest > 0 and economy.money < cheapest and not has_stock:
-		end_run(false)
-		return true
-	return false
-
-
-func _resolve_flowers(ids: Array[String]) -> Array[FlowerData]:
-	var result: Array[FlowerData] = []
-	for id in ids:
-		var f := FlowerDatabase.get_flower(id)
-		if f:
-			result.append(f)
-	return result
+	return day.check_defeat()

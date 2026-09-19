@@ -13,10 +13,14 @@ const CORNER_TREND_MULTIPLIER := 1.4
 
 func calculate_value(flower_ids: Array[String], context: ComboContext = null) -> ComboResult:
 	var flowers: Array[FlowerData] = []
+	var warnings: Array[String] = []
 	for id in flower_ids:
 		var f := FlowerDatabase.get_flower(id)
 		if f:
 			flowers.append(f)
+		else:
+			warnings.append("未知花材 id：" + id)
+			push_warning("ComboEngine: 未知花材 id '%s'（数据缺失或拼写错误）" % id)
 
 	var base := 0
 	for f in flowers:
@@ -46,7 +50,7 @@ func calculate_value(flower_ids: Array[String], context: ComboContext = null) ->
 			multiplier *= trend_mult
 			modifiers.append("流行趋势加成 x%.1f" % trend_mult)
 
-	return ComboResult.new(base, multiplier, modifiers, rule_ids)
+	return ComboResult.new(base, multiplier, modifiers, rule_ids, warnings)
 
 
 func _get_matching_rules(flowers: Array[FlowerData]) -> Array[ComboRule]:

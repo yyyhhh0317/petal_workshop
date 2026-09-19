@@ -15,6 +15,7 @@ var _result_stats: Label
 
 # 买花面板
 var _buy_pool_box: HFlowContainer
+var _reroll_btn: Button
 
 # 组合面板
 var _slot_box: HBoxContainer
@@ -151,6 +152,11 @@ func _build_buy_panel() -> Control:
 	_buy_pool_box.add_theme_constant_override("v_separation", 12)
 	vbox.add_child(_buy_pool_box)
 
+	_reroll_btn = Button.new()
+	_reroll_btn.text = "重roll今日事件"
+	_reroll_btn.pressed.connect(_on_reroll_pressed)
+	vbox.add_child(_reroll_btn)
+
 	var done_btn := Button.new()
 	done_btn.text = "完成进货，去组合花束 →"
 	done_btn.add_theme_font_size_override("font_size", 22)
@@ -198,6 +204,11 @@ func _refresh_buy_panel() -> void:
 
 func _on_buy_pressed(id: String) -> void:
 	if RunManager.buy_flower(id):
+		_refresh_all()
+
+
+func _on_reroll_pressed() -> void:
+	if RunManager.reroll_daily_event():
 		_refresh_all()
 
 
@@ -462,6 +473,10 @@ func _refresh_all() -> void:
 	_refresh_arrange_panel()
 	_business_start_btn.visible = true
 	_business_settle_btn.visible = false
+	if RunManager.day:
+		var left := RunManager.day.rerolls_left
+		_reroll_btn.visible = left > 0
+		_reroll_btn.text = "重roll今日事件（剩余 %d 次）" % left
 
 
 func _phase_name(phase: DayPhase.Phase) -> String:

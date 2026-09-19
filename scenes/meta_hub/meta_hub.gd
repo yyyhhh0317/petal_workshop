@@ -112,11 +112,14 @@ func _refresh() -> void:
 		child.queue_free()
 	var rules := FlowerDatabase.get_combo_rules()
 	var discovered := 0
+	var hint_level := MetaManager.get_upgrade_level("up_hint")
 	for rule in rules:
 		var lb := Label.new()
 		if m.encyclopedia.has(rule.id):
 			discovered += 1
 			lb.text = "✔ %s" % rule.display_name
+		elif hint_level >= 1:
+			lb.text = "？ 未发现：" + _combo_hint(rule, hint_level)
 		else:
 			lb.text = "？ 未发现的组合"
 		_combo_box.add_child(lb)
@@ -173,6 +176,34 @@ func _refresh() -> void:
 			btn.disabled = not MetaManager.can_buy_upgrade(upgrade_id)
 			btn.pressed.connect(func() -> void: _on_buy_upgrade(upgrade_id))
 		row.add_child(btn)
+
+
+func _combo_hint(rule: ComboRule, level: int) -> String:
+	## 未发现组合的模糊线索：1 级给方向，2 级给具体花材。
+	var tag_names := {"red": "红", "pink": "粉", "yellow": "金", "white": "白", "purple": "紫", "blue": "蓝", "warm": "暖", "cool": "冷", "filler": "配花"}
+	if rule.required_ids.size() >= 2:
+		if level >= 2:
+			var names: Array[String] = []
+			for id in rule.required_ids:
+				names.append(FlowerDatabase.get_flower(id).display_name)
+			return "包含 %s 的组合" % " 与 ".join(names)
+		return "两种特定花材的组合"
+	if rule.required_ids.size() == 1:
+		return "围绕某种特定花材的组合"
+	if not rule.required_categories.is_empty():
+		return "与主花 / 中花 / 配花结构有关的组合"
+	if not rule.required_tags_all.is_empty():
+		if level >= 2:
+			var t: String = rule.required_tags_all[0]
+			return "纯%s色系的花束" % tag_names.get(t, t)
+		return "单一色系的纯色花束"
+	if not rule.any_of_tags.is_empty():
+		return "同时含两种色调的组合"
+	if rule.require_min_rarity > 0 or rule.any_min_rarity > 0:
+		return "与稀有度有关的组合"
+	if rule.require_min_size > 0 or rule.require_exact_size > 0 or rule.require_max_size > 0:
+		return "与花束大小有关的组合"
+	return "隐藏的组合规则"
 
 
 func _on_buy_upgrade(upgrade_id: String) -> void:

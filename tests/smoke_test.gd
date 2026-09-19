@@ -16,6 +16,7 @@ func _ready() -> void:
 	_test_day_loop()
 	_test_run_goal()
 	_test_meta_progression()
+	_test_nonlinear_sp()
 	_test_patience()
 	if _failures == 0:
 		print("[smoke] 全部通过 ✔")
@@ -41,6 +42,8 @@ func _test_database() -> void:
 	_check(flowers.size() >= 30, "花材数据加载（≥30 种）")
 	_check(rules.size() >= 60, "组合规则加载（≥60 条）")
 	_check(FlowerDatabase.get_flower("orchid") != null, "兰花数据可查询")
+	_check(FlowerDatabase.has_flower("rose"), "has_flower 正常")
+	_check(FlowerDatabase.load_warnings.is_empty(), "数据 schema 校验零警告")
 	_check(FlowerDatabase.get_unlocked_flowers(0).size() == 18, "声望 0 解锁 18 种基础花材")
 	_check(FlowerDatabase.get_unlocked_flowers(3).size() == 21, "声望 3 解锁兰花/鸢尾/杜鹃")
 	_check(FlowerDatabase.get_unlocked_flowers(6).size() == 28, "声望 6 解锁荷花/芍药")
@@ -87,6 +90,10 @@ func _test_combo_engine() -> void:
 	trend_ctx.trend_tags = ["warm"]
 	var trended := engine.calculate_value(["rose", "tulip"], trend_ctx)
 	_check(trended.final_value > 20 + 18, "普通流行趋势加成生效")
+	var unknown := engine.calculate_value(["rose", "ghost_flower"], ctx)
+	_check(unknown.warnings.size() == 1, "未知花材产生告警")
+	var rose_only := engine.calculate_value(["rose"], ctx)
+	_check(unknown.final_value == rose_only.final_value, "未知花材不计入价值")
 
 
 func _test_seed_determinism() -> void:
@@ -143,6 +150,7 @@ func _test_day_loop() -> void:
 	_check(RunManager.place_bouquet_to_current_slot(), "花束放入展示位")
 	_check(RunManager.current_bouquet.is_empty(), "放入后编辑花束清空")
 
+	_check(RunManager.day != null, "DayCycle 控制器已创建")
 	var log := RunManager.run_business_day()
 	print("[smoke] 营业日志示例：%s" % log[0])
 	_check(log.size() >= 1, "营业模拟产生日志")
@@ -155,6 +163,7 @@ func _test_day_loop() -> void:
 
 	var settle := RunManager.finish_day()
 	_check(settle.profit == settle.revenue - settle.cost, "日结算利润一致")
+	_check(settle.cost >= 40, "摊位租金计入当日支出")
 	_check(RunManager.daily_event == null, "当日事件已失效")
 
 	RunManager.advance_day()
@@ -170,19 +179,19 @@ func _test_run_goal() -> void:
 	## 债务周目目标：第 10 天按资金是否 ≥ 债务判定胜负。
 	MetaManager.reset_meta()
 	RunManager.start_run(5, 10)
-	_check(RunManager.debt == 900, "周目债务 900")
-	_check(RunManager.debt_remaining() == 400, "初始债务差额 400")
+	_check(RunManager.debt == 800, "周目债务 800")
+	_check(RunManager.debt_remaining() == 300, "初始债务差额 300")
 	for i in 10:
 		RunManager.advance_day()
 	_check(not RunManager.run_active, "第 10 天结算后周目结束")
-	_check(MetaManager.meta.last_run.victory == false, "资金不足（500<900）判负")
+	_check(MetaManager.meta.last_run.victory == false, "资金不足（500<800）判负")
 
 	MetaManager.reset_meta()
 	RunManager.start_run(6, 10)
 	RunManager.economy.earn(500)
 	for i in 10:
 		RunManager.advance_day()
-	_check(MetaManager.meta.last_run.victory == true, "资金足够（1000≥900）判胜")
+	_check(MetaManager.meta.last_run.victory == true, "资金足够（1000≥800）判胜")
 
 
 func _test_meta_progression() -> void:
@@ -222,6 +231,35 @@ func _test_meta_progression() -> void:
 	_check(unlocked_ok, "花材池每朵花都在当前声望下已解锁")
 	_check(pool.size() == 8, "花材池规模 8 种")
 	RunManager.end_run(false)
+
+	# 新增升级：花材池 / 事件重roll / 图鉴线索
+	MetaManager.add_skill_points(20)
+	_check(MetaManager.buy_upgrade("up_pool"), "购买花材池升级")
+	_check(MetaManager.buy_upgrade("up_reroll"), "购买事件重roll升级")
+	_check(MetaManager.buy_upgrade("up_hint"), "购买图鉴线索升级")
+	RunManager.start_run(4, 3)
+	_check(RunManager.flower_pool.size() == 9, "花材池升级生效（8+1）")
+	_check(RunManager.day.rerolls_left == 1, "事件重roll次数 = 升级等级")
+	_check(RunManager.reroll_daily_event(), "重roll今日事件成功")
+	_check(RunManager.day.rerolls_left == 0, "重roll后次数归零")
+	_check(not RunManager.reroll_daily_event(), "次数耗尽无法重roll")
+	RunManager.end_run(false)
+
+
+func _test_nonlinear_sp() -> void:
+	## 非线性技能点：胜利奖励首次破纪录 +3，重复胜利 +1。
+	MetaManager.reset_meta()
+	RunManager.start_run(2, 5)
+	RunManager.economy.earn(500)
+	for i in 5:
+		RunManager.advance_day()
+	_check(int(MetaManager.meta.skill_points) == 8, "首次胜利（破纪录）：5 天 + 3 奖励")
+
+	RunManager.start_run(3, 5)
+	RunManager.economy.earn(500)
+	for i in 5:
+		RunManager.advance_day()
+	_check(int(MetaManager.meta.skill_points) == 14, "重复胜利：5 天 + 1 奖励（共 14）")
 
 
 func _test_patience() -> void:

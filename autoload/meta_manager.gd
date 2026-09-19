@@ -18,6 +18,9 @@ const UPGRADE_DEFS := {
 	"up_start_money": {"name": "初始资金 +50", "max_level": 3, "cost": 2, "effect": 50},
 	"up_discount": {"name": "进货折扣 5%/级", "max_level": 3, "cost": 3, "effect": 5},
 	"up_slot": {"name": "展示位 +1", "max_level": 1, "cost": 8, "effect": 1},
+	"up_pool": {"name": "花材池 +1/级", "max_level": 2, "cost": 4, "effect": 1},
+	"up_reroll": {"name": "每日事件重roll +1/级", "max_level": 2, "cost": 5, "effect": 1},
+	"up_hint": {"name": "图鉴线索提示", "max_level": 2, "cost": 4, "effect": 1},
 }
 
 var meta: Dictionary = {}
@@ -103,10 +106,16 @@ func gain_reputation(amount: int) -> void:
 
 
 func record_run_end(day_reached: int, victory: bool, run_reputation: int = 0) -> void:
-	## 无论胜负都折算元进度：技能点 = 经营天数（胜利 +3），声望 = 天数 + 本局售花声望。
+	## 无论胜负都折算元进度（非线性）：
+	## 技能点 = 经营天数 + 胜利奖励；胜利奖励仅在突破最佳纪录时为 +3，否则 +1，
+	## 避免"两局点满升级树"，让元进度在更长的周目跨度上保持牵引力。
+	var is_new_best := day_reached > int(meta.best_day)
+	var victory_bonus := 0
+	if victory:
+		victory_bonus = 3 if is_new_best else 1
 	meta.runs_completed += 1
 	meta.best_day = maxi(meta.best_day, day_reached)
-	meta.skill_points = int(meta.skill_points) + day_reached + (3 if victory else 0)
+	meta.skill_points = int(meta.skill_points) + day_reached + victory_bonus
 	meta.reputation = int(meta.reputation) + day_reached + run_reputation
 	meta.last_run = {"day": day_reached, "victory": victory}
 	save_meta()

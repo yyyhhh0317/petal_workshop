@@ -32,6 +32,15 @@ func earn(amount: int) -> void:
 	EventBus.money_changed.emit(money)
 
 
+func pay_fixed(amount: int) -> int:
+	## 固定支出（如摊位租金）：有多少扣多少，计入当日成本，返回实际支付额。
+	var paid := mini(amount, money)
+	money -= paid
+	daily_cost += paid
+	EventBus.money_changed.emit(money)
+	return paid
+
+
 func end_day() -> Dictionary:
 	## 结算当日收支并清零，返回明细。
 	var profit := daily_revenue - daily_cost

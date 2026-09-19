@@ -26,34 +26,33 @@
 
 ## 快速开始
 
-### 引擎位置（本机）
+### 引擎要求
 
-- 图形版：`C:\Users\17801\AppData\Local\Programs\Godot\godot.exe`
-- 控制台版（命令行 / 无头验证用）：`C:\Users\17801\AppData\Local\Programs\Godot\godot_console.exe`
-
-打开项目（编辑器）：`godot.exe --path D:\yyy\petal_workshop`
-
-### 运行游戏（M1 核心原型）
+Godot **4.7.2**（`godot` / `godot_console` 需在 PATH 中；若本机引擎未加入 PATH，先执行）：
 
 ```powershell
-& "C:\Users\17801\AppData\Local\Programs\Godot\godot.exe" --path "D:\yyy\petal_workshop"
+$env:Path += ";$env:LOCALAPPDATA\Programs\Godot"
 ```
 
-主菜单可选「开始新周目」（随机种子）或「每日挑战」（日期固定种子）：**买花 → 组合花束放入展示位（橱窗 ×1.5 / 中央 ≥3支 ×1.15 / 角落 流行×1.4）→ 开始营业 → 结算**，目标 10 天内还清 900 元债务；「工坊手册」可浏览图鉴、查看花材解锁进度，并消费技能点购买永久升级。
+### 运行游戏
+
+```powershell
+godot --path .
+```
+
+主菜单可选「开始新周目」（随机种子）或「每日挑战」（日期固定种子）：**买花 → 组合花束放入展示位（橱窗 ×1.5 / 中央 ≥3支 ×1.15 / 角落 流行×1.4）→ 开始营业 → 结算**，目标 10 天内还清 800 元债务（每日摊位租金 20 元）；「工坊手册」可浏览图鉴（升级后可看未发现组合的线索）、查看花材解锁进度，并消费技能点购买永久升级。
 
 ### 骨架验证（命令行）
 
 ```powershell
-$godot = "$env:LOCALAPPDATA\Programs\Godot\godot_console.exe"
-
 # 1. 导入项目资源（生成 .godot 缓存与脚本 UID）
-& $godot --headless --path "D:\yyy\petal_workshop" --import
+godot_console --headless --path . --import
 
-# 2. 跑冒烟测试（数据 → 组合 → 种子 → 经济 → 整日循环 → 元进度 → 债务目标 → 耐心阈值）
-& $godot --headless --path "D:\yyy\petal_workshop" "res://tests/smoke_test.tscn"
+# 2. 冒烟测试（成功 = 退出码 0 且输出末尾「全部通过 ✔」）
+godot_console --headless --path . res://tests/smoke_test.tscn
 
-# 3. 批量自动对局（200 局贪心 bot 平衡验证）
-& $godot --headless --path "D:\yyy\petal_workshop" "res://tests/simulate.tscn"
+# 3. 批量自动对局（3 种 bot 策略分组统计；可用 SIM_RUNS / SIM_DAYS 环境变量调整规模）
+godot_console --headless --path . res://tests/simulate.tscn
 ```
 
 输出末尾出现 `[smoke] 全部通过 ✔` 即骨架正常。
@@ -91,7 +90,7 @@ D:\yyy\petal_workshop\
 |--------|------|
 | 引擎版本 | 锁定 **Godot 4.7.2**（本机已安装并验证） |
 | 脚本语言 | GDScript 为主，C# 仅作性能敏感模块备选 |
-| 本轮交付 | 骨架 + M1 原型 + M2 Roguelite + **M3 内容填充**（v0.5）：30 花 / 61 规则 / 13 事件 / 11 顾客 / 债务校准 900 |
+| 本轮交付 | 骨架 + M1/M2/M3 + **评审整改**：DayCycle 拆分 / 数据 schema 校验 / 多策略模拟 / 租金与债务重校（债务 800、租金 20/天） |
 | 版本控制 | Git 仓库，文档与骨架已提交为初始 commit |
 | Steam 集成 | 阶段四引入 GodotSteam 4.22（官方确认兼容 Godot 4.7.2） |
 
