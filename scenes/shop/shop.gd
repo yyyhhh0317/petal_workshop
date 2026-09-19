@@ -1,11 +1,12 @@
 extends Control
-## 商店场景（M1 核心原型）：每日循环 UI —— 买花 → 组合展示 → 营业 → 结算。
-## 占位美术：UI 全部以代码构建，后续替换为正式场景与资源。
+## 商店场景（M2）：每日循环 UI —— 买花 → 组合展示 → 营业 → 结算。
+## 周目目标：target_days 天内攒够 debt 还清债务。UI 以代码构建（占位美术）。
 
 var _money_label: Label
 var _day_label: Label
 var _phase_label: Label
 var _event_label: Label
+var _goal_label: Label
 
 var _panels: Dictionary = {}           # DayPhase.Phase -> Control
 var _result_overlay: Control
@@ -14,12 +15,12 @@ var _result_stats: Label
 
 # 买花面板
 var _buy_pool_box: HBoxContainer
-var _buy_buttons: Dictionary = {}
 
 # 组合面板
+var _slot_box: HBoxContainer
+var _slot_group: ButtonGroup
 var _slot_buttons: Array[Button] = []
 var _inventory_box: HBoxContainer
-var _inventory_buttons: Dictionary = {}
 var _bouquet_label: Label
 var _preview_label: Label
 var _arrange_feedback: Label
@@ -32,7 +33,6 @@ var _business_settle_btn: Button
 # 结算面板
 var _settle_labels: Dictionary = {}
 var _settle_log: RichTextLabel
-var _next_day_btn: Button
 
 
 func _ready() -> void:
@@ -73,6 +73,8 @@ func _build_ui() -> void:
 	header.add_child(_phase_label)
 	_money_label = Label.new()
 	header.add_child(_money_label)
+	_goal_label = Label.new()
+	header.add_child(_goal_label)
 
 	_event_label = Label.new()
 	_event_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -96,7 +98,7 @@ func _build_buy_panel() -> Control:
 	panel.add_child(vbox)
 
 	var title := Label.new()
-	title.text = "今天的花材池（价格受当日事件影响）"
+	title.text = "今天的花材池（价格受当日事件与进货折扣影响）"
 	vbox.add_child(title)
 
 	_buy_pool_box = HBoxContainer.new()
@@ -113,7 +115,6 @@ func _refresh_buy_panel() -> void:
 	for child in _buy_pool_box.get_children():
 		_buy_pool_box.remove_child(child)
 		child.queue_free()
-	_buy_buttons.clear()
 	for id in RunManager.flower_pool:
 		var f := FlowerDatabase.get_flower(id)
 		if f == null:
@@ -128,7 +129,6 @@ func _refresh_buy_panel() -> void:
 		btn.text = "买入（%d 元）" % cost
 		btn.disabled = not RunManager.economy.can_afford(cost)
 		btn.pressed.connect(func() -> void: _on_buy_pressed(id))
-		_buy_buttons[id] = btn
 		vbox.add_child(btn)
 
 
@@ -148,17 +148,9 @@ func _build_arrange_panel() -> Control:
 	slots_label.text = "展示位（点击选择，橱窗位 ×1.5 价值加成）"
 	vbox.add_child(slots_label)
 
-	var slots_box := HBoxContainer.new()
-	vbox.add_child(slots_box)
-	var group := ButtonGroup.new()
-	for i in RunManager.SLOT_NAMES.size():
-		var btn := Button.new()
-		btn.toggle_mode = true
-		btn.button_group = group
-		btn.text = RunManager.SLOT_NAMES[i]
-		btn.pressed.connect(func() -> void: _on_slot_selected(i))
-		_slot_buttons.append(btn)
-		slots_box.add_child(btn)
+	_slot_group = ButtonGroup.new()
+	_slot_box = HBoxContainer.new()
+	vbox.add_child(_slot_box)
 
 	var hint := Label.new()
 	hint.text = "点击花材加入/移出花束（最多 5 支）"
@@ -194,6 +186,20 @@ func _build_arrange_panel() -> Control:
 	return panel
 
 
+func _rebuild_slot_buttons() -> void:
+	for child in _slot_box.get_children():
+		_slot_box.remove_child(child)
+		child.queue_free()
+	_slot_buttons.clear()
+	for i in RunManager.display_slots.size():
+		var btn := Button.new()
+		btn.toggle_mode = true
+		btn.button_group = _slot_group
+		btn.pressed.connect(func() -> void: _on_slot_selected(i))
+		_slot_buttons.append(btn)
+		_slot_box.add_child(btn)
+
+
 func _on_slot_selected(index: int) -> void:
 	RunManager.current_slot_index = index
 	_refresh_arrange_panel()
@@ -210,7 +216,7 @@ func _on_place_pressed() -> void:
 	if not RunManager.place_bouquet_to_current_slot():
 		_arrange_feedback.text = "先选几支花再放入展示位。"
 	else:
-		_arrange_feedback.text = "已放入「%s」。" % RunManager.SLOT_NAMES[RunManager.current_slot_index]
+		_arrange_feedback.text = "已放入「%s」。" % RunManager.get_slot_name(RunManager.current_slot_index)
 	_refresh_arrange_panel()
 
 
@@ -222,10 +228,12 @@ func _on_meta_unlocked(unlock_id: String) -> void:
 
 
 func _refresh_arrange_panel() -> void:
+	if _slot_buttons.size() != RunManager.display_slots.size():
+		_rebuild_slot_buttons()
 	for i in _slot_buttons.size():
 		var btn := _slot_buttons[i]
 		var slot = RunManager.display_slots[i]
-		var text := "%s %s" % [RunManager.SLOT_NAMES[i], "×1.5" if i == 0 else ""]
+		var text := "%s %s" % [RunManager.get_slot_name(i), "×1.5" if i == 0 else ""]
 		if slot.result != null:
 			var r: ComboResult = slot.result
 			var names: Array[String] = []
@@ -240,7 +248,6 @@ func _refresh_arrange_panel() -> void:
 	for child in _inventory_box.get_children():
 		_inventory_box.remove_child(child)
 		child.queue_free()
-	_inventory_buttons.clear()
 	for id in RunManager.flower_pool:
 		var count := int(RunManager.inventory.get(id, 0))
 		var in_bouquet := RunManager.current_bouquet.count(id)
@@ -250,7 +257,6 @@ func _refresh_arrange_panel() -> void:
 		var btn := Button.new()
 		btn.text = "%s ×%d%s" % [f.display_name, count + in_bouquet, "（在花束中）" if in_bouquet > 0 else ""]
 		btn.pressed.connect(func() -> void: _on_flower_toggle(id))
-		_inventory_buttons[id] = btn
 		_inventory_box.add_child(btn)
 
 	var names: Array[String] = []
@@ -277,7 +283,7 @@ func _build_business_panel() -> Control:
 	panel.add_child(vbox)
 
 	var title := Label.new()
-	title.text = "营业中 —— 顾客会按自己的偏好挑选花束"
+	title.text = "营业中 —— 顾客会按自己的偏好挑选花束，不满意可能会砍价"
 	vbox.add_child(title)
 
 	_business_start_btn = Button.new()
@@ -323,7 +329,7 @@ func _build_settlement_panel() -> Control:
 	title.text = "今日结算"
 	vbox.add_child(title)
 
-	for key in ["revenue", "cost", "profit", "money"]:
+	for key in ["revenue", "cost", "profit", "money", "debt"]:
 		var lb := Label.new()
 		_settle_labels[key] = lb
 		vbox.add_child(lb)
@@ -332,10 +338,10 @@ func _build_settlement_panel() -> Control:
 	_settle_log.custom_minimum_size = Vector2(0, 200)
 	vbox.add_child(_settle_log)
 
-	_next_day_btn = Button.new()
-	_next_day_btn.text = "下一天 →"
-	_next_day_btn.pressed.connect(_on_next_day)
-	vbox.add_child(_next_day_btn)
+	var next_btn := Button.new()
+	next_btn.text = "下一天 →"
+	next_btn.pressed.connect(_on_next_day)
+	vbox.add_child(next_btn)
 	return panel
 
 
@@ -344,6 +350,8 @@ func _fill_settlement(settle: Dictionary) -> void:
 	_settle_labels["cost"].text = "进货支出：%d 元" % settle.cost
 	_settle_labels["profit"].text = "当日利润：%d 元" % settle.profit
 	_settle_labels["money"].text = "当前资金：%d 元" % settle.money
+	var remaining := RunManager.debt_remaining()
+	_settle_labels["debt"].text = "债务进度：还需 %d 元%s" % [remaining, "（已可还清！）" if remaining == 0 else ""]
 	_settle_log.clear()
 	for line in RunManager.day_log:
 		_settle_log.append_text(line + "\n")
@@ -359,6 +367,7 @@ func _refresh_all() -> void:
 	_day_label.text = "第 %d/%d 天 · 种子 %d" % [RunManager.current_day, RunManager.target_days, RunManager.seed_value]
 	_phase_label.text = "阶段：%s" % _phase_name(RunManager.current_phase)
 	_money_label.text = "资金：%d 元" % RunManager.economy.money
+	_goal_label.text = "目标：还清 %d 元债务（还差 %d）" % [RunManager.debt, RunManager.debt_remaining()]
 	var ev := RunManager.daily_event
 	_event_label.text = "今日事件：%s —— %s" % [ev.display_name, ev.description] if ev != null else "今日无特殊事件。"
 	for key in _panels:
@@ -384,6 +393,7 @@ func _phase_name(phase: DayPhase.Phase) -> String:
 
 func _on_money_changed(money: int) -> void:
 	_money_label.text = "资金：%d 元" % money
+	_goal_label.text = "目标：还清 %d 元债务（还差 %d）" % [RunManager.debt, RunManager.debt_remaining()]
 	_refresh_buy_panel()
 
 
@@ -426,6 +436,6 @@ func _build_result_overlay() -> void:
 
 
 func _on_run_ended(victory: bool, stats: Dictionary) -> void:
-	_result_title.text = "开店成功！" if victory else "破产了……"
-	_result_stats.text = "经营了 %d 天 · 剩余资金 %d 元 · 种子 %d" % [stats.day, stats.money, stats.seed]
+	_result_title.text = "债务还清！" if victory else "经营失败……"
+	_result_stats.text = "经营了 %d 天 · 剩余资金 %d 元（债务 %d）· 种子 %d" % [stats.day, stats.money, stats.debt, stats.seed]
 	_result_overlay.visible = true

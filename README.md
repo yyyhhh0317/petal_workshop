@@ -3,7 +3,7 @@
 **项目名**：Petal Workshop（英文）/ 花间工坊（中文，原代号 Bloom & Bust）
 **引擎**：Godot 4.7.2（GDScript，GL Compatibility 渲染管线）
 **目标平台**：Steam（Windows / macOS / Linux）
-**项目状态**：✅ M1 核心原型可玩（v0.3）：买花 → 组合展示 → 营业 → 结算 完整每日循环
+**项目状态**：✅ M2 Roguelite 系统完成（v0.4）：元进度闭环 + 债务周目目标 + 讨价还价 + 每日挑战
 
 > 一款以「买花 → 组合花束 → 展示 → 营业结算」为核心循环的花店经营 Roguelite。
 > 花材搭配会增值或贬值；每日随机事件打破固定最优解；每一局失败都能积累元进度。
@@ -31,15 +31,15 @@
 - 图形版：`C:\Users\17801\AppData\Local\Programs\Godot\godot.exe`
 - 控制台版（命令行 / 无头验证用）：`C:\Users\17801\AppData\Local\Programs\Godot\godot_console.exe`
 
-打开项目（编辑器）：`godot.exe --path D:\yyy\flower`
+打开项目（编辑器）：`godot.exe --path D:\yyy\petal_workshop`
 
 ### 运行游戏（M1 核心原型）
 
 ```powershell
-& "C:\Users\17801\AppData\Local\Programs\Godot\godot.exe" --path "D:\yyy\flower"
+& "C:\Users\17801\AppData\Local\Programs\Godot\godot.exe" --path "D:\yyy\petal_workshop"
 ```
 
-主菜单点击「开始新周目」即可游玩：**买花 → 组合花束放入展示位（橱窗位 ×1.5）→ 开始营业 → 结算**，目标经营 5 天，资金耗尽且无存货则破产。
+主菜单可选「开始新周目」（随机种子）或「每日挑战」（日期固定种子）：**买花 → 组合花束放入展示位（橱窗位 ×1.5）→ 开始营业 → 结算**，目标 10 天内还清 600 元债务；「工坊手册」可浏览图鉴、查看花材解锁进度，并消费技能点购买永久升级。
 
 ### 骨架验证（命令行）
 
@@ -47,10 +47,13 @@
 $godot = "$env:LOCALAPPDATA\Programs\Godot\godot_console.exe"
 
 # 1. 导入项目资源（生成 .godot 缓存与脚本 UID）
-& $godot --headless --path "D:\yyy\flower" --import
+& $godot --headless --path "D:\yyy\petal_workshop" --import
 
-# 2. 跑冒烟测试（数据加载 → 组合引擎 → 种子确定性 → 经济系统）
-& $godot --headless --path "D:\yyy\flower" "res://tests/smoke_test.tscn"
+# 2. 跑冒烟测试（数据 → 组合 → 种子 → 经济 → 整日循环 → 元进度 → 债务目标 → 耐心阈值）
+& $godot --headless --path "D:\yyy\petal_workshop" "res://tests/smoke_test.tscn"
+
+# 3. 批量自动对局（200 局贪心 bot 平衡验证）
+& $godot --headless --path "D:\yyy\petal_workshop" "res://tests/simulate.tscn"
 ```
 
 输出末尾出现 `[smoke] 全部通过 ✔` 即骨架正常。
@@ -66,7 +69,7 @@ $godot = "$env:LOCALAPPDATA\Programs\Godot\godot_console.exe"
 ## 目录结构
 
 ```
-D:\yyy\flower\
+D:\yyy\petal_workshop\
 ├── project.godot              # Godot 项目配置（Autoload、显示、渲染）
 ├── icon.svg                   # 项目图标（占位花朵）
 ├── autoload/                  # 全局单例：EventBus / SaveSystem / MetaManager / RunManager
@@ -75,8 +78,8 @@ D:\yyy\flower\
 │   ├── flowers/               #   花材定义（骨架含 4 种示例）
 │   ├── combos/                #   组合规则（骨架含 3 条示例）
 │   └── events/                #   每日事件模板（骨架含 1 个示例）
-├── scenes/                    # 场景：main_menu（主菜单）/ shop（每日循环 UI）/ meta_hub / ui
-├── tests/                     # 冒烟测试
+├── scenes/                    # 场景：main_menu（主菜单）/ shop（每日循环 UI）/ meta_hub（工坊手册）
+├── tests/                     # 冒烟测试 + 批量对局平衡工具
 ├── assets/                    # sprites / audio / fonts（占位）
 ├── steam/                     # Steam 集成（阶段四引入 GodotSteam）
 └── docs/                      # 开发文档
@@ -88,7 +91,7 @@ D:\yyy\flower\
 |--------|------|
 | 引擎版本 | 锁定 **Godot 4.7.2**（本机已安装并验证） |
 | 脚本语言 | GDScript 为主，C# 仅作性能敏感模块备选 |
-| 本轮交付 | 项目骨架 + **M1 核心原型**：完整可玩每日循环（v0.3）+ 44 项冒烟测试 |
+| 本轮交付 | 骨架 + M1 原型 + **M2 Roguelite 系统**（v0.4）：元进度 / 债务目标 / 讨价还价 / 每日挑战 / 平衡工具 |
 | 版本控制 | Git 仓库，文档与骨架已提交为初始 commit |
 | Steam 集成 | 阶段四引入 GodotSteam 4.22（官方确认兼容 Godot 4.7.2） |
 

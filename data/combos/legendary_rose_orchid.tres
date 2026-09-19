@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="ComboRule" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/combo_rule.gd" id="1_rule"]
+
+[resource]
+script = ExtResource("1_rule")
+id = "legendary_rose_orchid"
+display_name = "雅俗共赏：玫瑰+兰花"
+rule_type = 1
+priority = 18
+description = "热烈与高洁的碰撞，价值提升 80%。"
+value_multiplier = 1.8
+required_ids = Array[String](["rose", "orchid"])
+any_of_ids = Array[String]([])
+required_tags = Array[String]([])
+required_category = ""
+min_matches = 1
+require_shared_tag = false
+is_taboo = false
+

@@ -1,17 +1,18 @@
 extends Node
 ## 单局生命周期管理器（Autoload）：周目开始、每日状态机、库存与展示位状态、
 ## 进货/组合/营业/结算全流程，以及胜负判定。
+## M2：周目目标 = 在 target_days 天内攒够 debt 还清债务；元进度升级影响开局。
 
-const START_MONEY := 500
-const DEFAULT_TARGET_DAYS := 5
+const BASE_START_MONEY := 500
+const DEFAULT_TARGET_DAYS := 10
+const DEFAULT_DEBT := 600
 const BOUQUET_MAX := 5
-const SLOT_TYPES := [ComboContext.SlotType.WINDOW, ComboContext.SlotType.CENTER, ComboContext.SlotType.CORNER]
-const SLOT_NAMES := ["橱窗位", "中央位", "角落位"]
 
 var run_active := false
 var seed_value: int = 0
 var current_day: int = 0
 var target_days: int = DEFAULT_TARGET_DAYS
+var debt: int = DEFAULT_DEBT
 var current_phase: DayPhase.Phase = DayPhase.Phase.BUY
 var economy: EconomySystem
 var event_system: EventSystem
@@ -26,13 +27,15 @@ var current_slot_index: int = 0
 var display_slots: Array = []            # [{bouquet: Array[String], result: ComboResult}]
 var day_log: Array[String] = []          # 营业与凋谢日志
 var daily_event: DailyEvent
+var run_reputation: int = 0              # 本局售花累计声望
 
 
-func start_run(p_seed: int = 0, start_money: int = START_MONEY, p_target_days: int = DEFAULT_TARGET_DAYS) -> void:
-	## 开始新周目：初始化种子与各系统，随机花材池与首日事件，进入第 1 天买花阶段。
+func start_run(p_seed: int = 0, p_target_days: int = DEFAULT_TARGET_DAYS) -> void:
+	## 开始新周目：应用元进度升级（初始资金/折扣/展示位），花材池按声望解锁过滤。
 	seed_generator = SeedGenerator.new()
 	seed_generator.initialize(p_seed)
 	seed_value = seed_generator.seed_value
+	var start_money := BASE_START_MONEY + 50 * MetaManager.get_upgrade_level("up_start_money")
 	economy = EconomySystem.new(start_money)
 	event_system = EventSystem.new()
 	customer_system = CustomerSystem.new()
@@ -40,15 +43,19 @@ func start_run(p_seed: int = 0, start_money: int = START_MONEY, p_target_days: i
 	run_active = true
 	current_day = 1
 	target_days = p_target_days
+	debt = DEFAULT_DEBT
+	run_reputation = 0
 	current_phase = DayPhase.Phase.BUY
 	inventory.clear()
 	current_bouquet.clear()
 	current_slot_index = 0
 	display_slots.clear()
-	for i in SLOT_TYPES.size():
+	var slot_count := 3 + MetaManager.get_upgrade_level("up_slot")
+	for i in slot_count:
 		display_slots.append({"bouquet": [], "result": null})
 	FlowerDatabase.load_all()
-	flower_pool = seed_generator.roll_flower_pool(5)
+	var unlocked := FlowerDatabase.get_unlocked_flowers(int(MetaManager.meta.reputation))
+	flower_pool = seed_generator.roll_flower_pool(5, unlocked)
 	daily_event = event_system.roll_daily_event(seed_generator.get_rng(), EventSystem.load_event_pool())
 	EventBus.run_started.emit(seed_value)
 
@@ -57,18 +64,19 @@ func end_run(victory: bool) -> void:
 	if not run_active:
 		return
 	run_active = false
-	MetaManager.record_run_end(current_day, victory)
+	MetaManager.record_run_end(current_day, victory, run_reputation)
 	EventBus.run_ended.emit(victory, {
 		"day": current_day,
 		"money": economy.money,
+		"debt": debt,
 		"seed": seed_value,
 	})
 
 
 func advance_day() -> void:
-	## 进入次日：达到目标天数即胜利，否则刷新当日事件回到买花阶段。
+	## 进入次日：达到目标天数时按资金是否够还债判定胜负。
 	if current_day >= target_days:
-		end_run(true)
+		end_run(economy.money >= debt)
 		return
 	current_day += 1
 	current_phase = DayPhase.Phase.BUY
@@ -82,25 +90,55 @@ func set_phase(phase: DayPhase.Phase) -> void:
 	EventBus.phase_changed.emit(phase)
 
 
+func debt_remaining() -> int:
+	return maxi(debt - economy.money, 0)
+
+
+# ---------- 展示位 ----------
+
+func get_slot_name(index: int) -> String:
+	match index:
+		0: return "橱窗位"
+		1: return "中央位"
+		2: return "角落位"
+	return "普通位"
+
+
+func get_slot_type(index: int) -> ComboContext.SlotType:
+	match index:
+		0: return ComboContext.SlotType.WINDOW
+		1: return ComboContext.SlotType.CENTER
+		2: return ComboContext.SlotType.CORNER
+	return ComboContext.SlotType.NORMAL
+
+
 # ---------- 买花 ----------
 
 func get_flower_cost(id: String) -> int:
 	var f := FlowerDatabase.get_flower(id)
 	if f == null:
 		return 0
-	return event_system.apply_cost_multiplier(f.cost)
+	var base_cost := f.cost * (1.0 - 0.05 * MetaManager.get_upgrade_level("up_discount"))
+	return event_system.apply_cost_multiplier(int(round(base_cost)))
 
 
 func buy_flower(id: String, count: int = 1) -> bool:
 	var f := FlowerDatabase.get_flower(id)
 	if f == null:
 		return false
-	var total := event_system.apply_cost_multiplier(f.cost) * count
+	var total := get_flower_cost(id) * count
 	if not economy.spend(total):
 		return false
 	inventory[id] = int(inventory.get(id, 0)) + count
 	EventBus.inventory_changed.emit()
 	return true
+
+
+func inventory_total() -> int:
+	var total := 0
+	for id in inventory:
+		total += int(inventory[id])
+	return total
 
 
 # ---------- 组合 ----------
@@ -140,7 +178,7 @@ func compute_bouquet_value() -> ComboResult:
 	if current_bouquet.is_empty():
 		return ComboResult.new()
 	var ctx := ComboContext.new()
-	ctx.slot_type = SLOT_TYPES[current_slot_index]
+	ctx.slot_type = get_slot_type(current_slot_index)
 	ctx.trend_tags = event_system.trend_tags
 	ctx.day_number = current_day
 	return combo_engine.calculate_value(current_bouquet.duplicate(), ctx)
@@ -162,7 +200,7 @@ func place_bouquet_to_current_slot() -> bool:
 # ---------- 营业 ----------
 
 func run_business_day() -> Array[String]:
-	## 生成当日顾客，按偏好挑选花束并付款，返回营业日志。
+	## 生成当日顾客，按偏好挑选花束并付款；满意度低且超预算时顾客会砍价。
 	clear_bouquet()
 	day_log.clear()
 	var rng := seed_generator.get_rng()
@@ -183,9 +221,18 @@ func run_business_day() -> Array[String]:
 		var pay := int(round(result.final_value * (0.6 + 0.8 * score)))
 		pay = event_system.apply_value_multiplier(pay)
 		var budget: int = customer.budget
-		pay = mini(pay, budget)
+		var haggle := false
+		if score >= 0.5:
+			pay = mini(pay, budget)
+		elif pay > budget:
+			pay = int(round(float(budget) * 0.7))
+			haggle = true
 		economy.earn(pay)
-		day_log.append("%s 买走了「%s」，支付 %d 元（满意度 %d%%）" % [profile.display_name, SLOT_NAMES[slot_idx], pay, int(score * 100.0)])
+		run_reputation += 1
+		if haggle:
+			day_log.append("%s 买走了「%s」，讨价还价后支付 %d 元（满意度 %d%%）" % [profile.display_name, get_slot_name(slot_idx), pay, int(score * 100.0)])
+		else:
+			day_log.append("%s 买走了「%s」，支付 %d 元（满意度 %d%%）" % [profile.display_name, get_slot_name(slot_idx), pay, int(score * 100.0)])
 		EventBus.customer_served.emit(score, pay)
 		slot.bouquet.clear()
 		slot.result = null

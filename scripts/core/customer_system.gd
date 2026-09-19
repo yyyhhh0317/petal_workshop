@@ -1,9 +1,11 @@
 class_name CustomerSystem
 extends RefCounted
 ## 顾客系统：顾客档案加载、顾客生成、偏好评分与挑选花束。
+## 耐心规则：耐心 ≥ 4 的顾客购买阈值降到 0.2，其余为 0.3。
 
 const CUSTOMER_DIR := "res://data/customers"
-const MIN_SCORE_TO_BUY := 0.2
+const MIN_SCORE_TO_BUY := 0.3
+const PATIENT_MIN_SCORE := 0.2
 
 static var _profiles: Array[CustomerProfile] = []
 
@@ -54,8 +56,10 @@ func score_bouquet(customer: Dictionary, flowers: Array[FlowerData]) -> float:
 
 func pick_bouquet(customer: Dictionary, slots: Array) -> int:
 	## 返回得分最高且达到购买阈值的展示位索引；没有满意的返回 -1。
+	var profile: CustomerProfile = customer.profile
+	var threshold := PATIENT_MIN_SCORE if profile.patience >= 4 else MIN_SCORE_TO_BUY
 	var best_index := -1
-	var best_score := MIN_SCORE_TO_BUY
+	var best_score := threshold
 	for i in slots.size():
 		var slot = slots[i]
 		if slot.result == null:

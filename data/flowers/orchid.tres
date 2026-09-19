@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="FlowerData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/flower_data.gd" id="1_flower"]
+
+[resource]
+script = ExtResource("1_flower")
+id = "orchid"
+display_name = "兰花"
+description = "高洁与君子之风。镇店之宝级别的名花。"
+base_value = 30
+cost = 15
+color_tags = Array[String](["purple", "cool"])
+category = "orchid"
+rarity = 2
+unlock_condition = "reputation:3"
+

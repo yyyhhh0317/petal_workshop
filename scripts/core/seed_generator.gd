@@ -19,9 +19,10 @@ func get_rng() -> RandomNumberGenerator:
 	return _rng
 
 
-func roll_flower_pool(pool_size: int) -> Array[String]:
-	## 从全部花材中随机抽取 pool_size 种作为本局花材池。
-	var shuffled := _shuffle_array(FlowerDatabase.get_all_flowers())
+func roll_flower_pool(pool_size: int, source: Array[FlowerData] = []) -> Array[String]:
+	## 从给定花材池（默认全部）随机抽取 pool_size 种作为本局花材池。
+	var all := source if not source.is_empty() else FlowerDatabase.get_all_flowers()
+	var shuffled := _shuffle_array(all)
 	var ids: Array[String] = []
 	var limit := mini(pool_size, shuffled.size())
 	for i in limit:

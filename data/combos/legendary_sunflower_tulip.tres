@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="ComboRule" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/combo_rule.gd" id="1_rule"]
+
+[resource]
+script = ExtResource("1_rule")
+id = "legendary_sunflower_tulip"
+display_name = "春日礼赞：向日葵+郁金香"
+rule_type = 1
+priority = 15
+description = "阳光与优雅的春日组合，价值提升 60%。"
+value_multiplier = 1.6
+required_ids = Array[String](["sunflower", "tulip"])
+any_of_ids = Array[String]([])
+required_tags = Array[String]([])
+required_category = ""
+min_matches = 1
+require_shared_tag = false
+is_taboo = false
+
