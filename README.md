@@ -1,6 +1,6 @@
-# 🌸 Bloom & Bust —— 花店 Roguelite 策略经营游戏
+# 🌸 花间工坊（Petal Workshop）—— 花店 Roguelite 策略经营游戏
 
-**项目代号**：Bloom & Bust（暂定）
+**项目名**：Petal Workshop（英文）/ 花间工坊（中文，原代号 Bloom & Bust）
 **引擎**：Godot 4.7.2（GDScript，GL Compatibility 渲染管线）
 **目标平台**：Steam（Windows / macOS / Linux）
 **项目状态**：✅ 骨架就绪（v0.2）→ 🚧 核心原型开发中

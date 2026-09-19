@@ -6,8 +6,8 @@ config_version=5
 
 [application]
 
-config/name="Bloom & Bust"
-config/description="花店 Roguelite 策略经营游戏"
+config/name="Petal Workshop"
+config/description="花间工坊（Petal Workshop）—— 花店 Roguelite 策略经营游戏"
 run/main_scene="res://scenes/main_menu/main_menu.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://icon.svg"

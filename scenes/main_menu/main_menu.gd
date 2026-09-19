@@ -6,5 +6,5 @@ extends Control
 
 
 func _ready() -> void:
-	title_label.text = "Bloom & Bust"
-	version_label.text = "花店 Roguelite —— 骨架版 v0.2\nGodot 4.7.2 · 主菜单占位"
+	title_label.text = "花间工坊"
+	version_label.text = "Petal Workshop —— 骨架版 v0.2\nGodot 4.7.2 · 主菜单占位"
