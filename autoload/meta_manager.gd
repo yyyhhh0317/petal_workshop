@@ -24,7 +24,11 @@ func load_meta() -> void:
 	meta = SaveSystem.load_meta()
 	for key in DEFAULT_META:
 		if not meta.has(key):
-			meta[key] = DEFAULT_META[key]
+			var default_value = DEFAULT_META[key]
+			if default_value is Dictionary or default_value is Array:
+				meta[key] = default_value.duplicate(true)
+			else:
+				meta[key] = default_value
 
 
 func save_meta() -> void:

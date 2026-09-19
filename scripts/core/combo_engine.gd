@@ -20,9 +20,11 @@ func calculate_value(flower_ids: Array[String], context: ComboContext = null) ->
 
 	var multiplier := 1.0
 	var modifiers: Array[String] = []
+	var rule_ids: Array[String] = []
 	for rule in _get_matching_rules(flowers):
 		multiplier *= rule.value_multiplier
 		modifiers.append(rule.display_name if rule.display_name != "" else rule.id)
+		rule_ids.append(rule.id)
 
 	if context:
 		if context.slot_type == ComboContext.SlotType.WINDOW:
@@ -32,7 +34,7 @@ func calculate_value(flower_ids: Array[String], context: ComboContext = null) ->
 			multiplier *= TREND_MULTIPLIER
 			modifiers.append("流行趋势加成 x%.1f" % TREND_MULTIPLIER)
 
-	return ComboResult.new(base, multiplier, modifiers)
+	return ComboResult.new(base, multiplier, modifiers, rule_ids)
 
 
 func _get_matching_rules(flowers: Array[FlowerData]) -> Array[ComboRule]:

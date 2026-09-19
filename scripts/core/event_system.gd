@@ -2,8 +2,27 @@ class_name EventSystem
 extends RefCounted
 ## 每日事件系统：ShuffleBag 加权抽取事件，聚合当日流行趋势。
 
+const EVENT_DIR := "res://data/events"
+
 var active_events: Array[DailyEvent] = []
 var trend_tags: Array[String] = []
+
+
+static func load_event_pool() -> Array[DailyEvent]:
+	var pool: Array[DailyEvent] = []
+	var dir := DirAccess.open(EVENT_DIR)
+	if dir == null:
+		return pool
+	dir.list_dir_begin()
+	var file_name := dir.get_next()
+	while file_name != "":
+		if not dir.current_is_dir() and file_name.ends_with(".tres"):
+			var res: DailyEvent = load(EVENT_DIR + "/" + file_name)
+			if res:
+				pool.append(res)
+		file_name = dir.get_next()
+	dir.list_dir_end()
+	return pool
 
 
 func roll_daily_event(rng: RandomNumberGenerator, pool: Array[DailyEvent]) -> DailyEvent:

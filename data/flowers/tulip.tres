@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="FlowerData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/flower_data.gd" id="1_flower"]
+
+[resource]
+script = ExtResource("1_flower")
+id = "tulip"
+display_name = "郁金香"
+description = "优雅与告白。春天最受欢迎的访客。"
+base_value = 18
+cost = 9
+color_tags = Array[String](["pink", "warm"])
+category = "tulip"
+rarity = 1
+unlock_condition = "always"
+

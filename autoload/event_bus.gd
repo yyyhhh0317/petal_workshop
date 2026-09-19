@@ -12,3 +12,6 @@ signal customer_served(satisfaction: float, payment: int)
 signal meta_unlocked(unlock_id: String)
 signal money_changed(money: int)
 signal day_event_rolled(event: DailyEvent)
+signal inventory_changed
+signal bouquet_changed
+signal display_changed

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="FlowerData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/flower_data.gd" id="1_flower"]
+
+[resource]
+script = ExtResource("1_flower")
+id = "sunflower"
+display_name = "向日葵"
+description = "忠诚与阳光。总把脸转向太阳。"
+base_value = 16
+cost = 8
+color_tags = Array[String](["yellow", "warm"])
+category = "sunflower"
+rarity = 1
+unlock_condition = "always"
+

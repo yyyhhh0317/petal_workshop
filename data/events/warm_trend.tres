@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="DailyEvent" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/daily_event.gd" id="1_ev"]
+
+[resource]
+script = ExtResource("1_ev")
+id = "warm_trend"
+display_name = "暖色流行"
+description = "今天暖色系花束大受欢迎，价值提升 20%，暖色成为流行趋势。"
+weight = 10
+cost_multiplier = 1.0
+value_multiplier = 1.2
+affected_tags = Array[String](["warm"])
+duration_days = 1

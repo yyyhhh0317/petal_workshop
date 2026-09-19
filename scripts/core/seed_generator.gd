@@ -15,6 +15,10 @@ func initialize(p_seed: int = 0) -> void:
 	_rng.seed = seed_value
 
 
+func get_rng() -> RandomNumberGenerator:
+	return _rng
+
+
 func roll_flower_pool(pool_size: int) -> Array[String]:
 	## 从全部花材中随机抽取 pool_size 种作为本局花材池。
 	var shuffled := _shuffle_array(FlowerDatabase.get_all_flowers())
